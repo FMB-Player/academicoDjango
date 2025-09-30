@@ -1,0 +1,37 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Inicio - Sistema Académico{% endblock %}
+
+{% block content %}
+<div class="welcome">
+    <h1>Bienvenido al Sistema Académico</h1>
+    
+    {% if user.is_authenticated %}
+        <div class="dashboard-cards">
+            <div class="card">
+                <h2>Panel de Control</h2>
+                <p>Bienvenido, {{ user.nombre }} {{ user.apellido }}.</p>
+                
+                <div class="quick-actions">
+                    {% if user.rol == 'ADMIN' %}
+                        <a href="{% url 'core:admin_dashboard' %}" class="btn btn-primary">Administración</a>
+                    {% endif %}
+                    {% if user.rol == 'ALUMNO' %}
+                        <a href="{% url 'core:alumno_dashboard' %}" class="btn btn-primary">Mis Cursos</a>
+                    {% endif %}
+                    {% if user.rol == 'DOCENTE' %}
+                        <a href="{% url 'core:docente_dashboard' %}" class="btn btn-primary">Mis Materias</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="auth-options">
+            <p>Por favor inicia sesión para acceder al sistema.</p>
+            <div class="auth-buttons">
+                <a href="{% url 'core:login' %}" class="btn btn-primary">Iniciar Sesión</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

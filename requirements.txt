@@ -1,0 +1,10 @@
+# Core
+Django>=5.0.0,<5.1.0  # Latest in 5.0.x series
+python-dotenv>=1.0.0,<2.0.0
+Pillow>=10.0.0,<11.0.0  # For image processing
+whitenoise>=6.5.0,<7.0.0  # For static files in production
+
+# Database
+psycopg2-binary>=2.9.6,<3.0.0  # PostgreSQL adapter
+
+# Install development requirements with: pip install -r requirements-dev.txt

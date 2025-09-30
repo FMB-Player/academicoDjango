@@ -1,0 +1,139 @@
+{% extends 'core/dashboards/base_dashboard.html' %}
+
+{% block dashboard_title %}Panel del Docente{% endblock %}
+
+{% block dashboard_subtitle %}
+Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apellido }}{% else %}{{ user.email }}{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-grid">
+    <!-- Mis Materias -->
+    <div class="dashboard-card wide">
+        <div class="card-header">
+            <h2><i class="fas fa-chalkboard-teacher"></i> Mis Materias</h2>
+            <a href="{% url 'core:mis_materias' %}" class="btn btn-sm">Ver todas</a>
+        </div>
+        <div class="card-content">
+            {% if materias %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Materia</th>
+                                <th>Carrera</th>
+                                <th>Alumnos</th>
+                                <th>Cupo máx.</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for materia in materias|slice:":5" %}
+                            <tr>
+                                <td>{{ materia.nombre }}</td>
+                                <td>{{ materia.carrera.nombre }}</td>
+                                <td>{{ materia.inscripciones.count }}</td>
+                                <td>{{ materia.cupo_maximo }}</td>
+                                <td>
+                                    {% if materia.is_active %}
+                                        <span class="badge bg-success">Activa</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Inactiva</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-icon" title="Ver detalles" disabled>
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-icon" title="Tomar asistencia" disabled>
+                                        <i class="fas fa-clipboard-check"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if materias|length > 5 %}
+                <div class="text-center mt-2">
+                    <a href="{% url 'core:mis_materias' %}" class="btn btn-sm">Ver más materias</a>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <p>No tienes materias asignadas.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Próximas Clases -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2><i class="far fa-calendar-alt"></i> Próximas Clases</h2>
+        </div>
+        <div class="card-content">
+            {% if proximas_clases %}
+                <ul class="event-list">
+                    {% for clase in proximas_clases|slice:":3" %}
+                    <li class="event-item">
+                        <div class="event-time">
+                            <span class="event-day">{{ clase.fecha|date:"d" }}</span>
+                            <span class="event-month">{{ clase.fecha|date:"M" }}</span>
+                        </div>
+                        <div class="event-details">
+                            <h4>{{ clase.materia.nombre }}</h4>
+                            <p>{{ clase.fecha|date:"H:i" }} - {{ clase.aula }}</p>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="text-center mt-2">
+                    <a href="#" class="btn btn-sm">Ver calendario completo</a>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="far fa-calendar-alt"></i>
+                    <p>No hay clases programadas.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tareas Pendientes -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2><i class="fas fa-tasks"></i> Tareas Pendientes</h2>
+        </div>
+        <div class="card-content">
+            {% if tareas_pendientes %}
+                <ul class="task-list">
+                    {% for tarea in tareas_pendientes|slice:":3" %}
+                    <li class="task-item {% if tarea.prioridad == 'A' %}priority-high{% elif tarea.prioridad == 'M' %}priority-medium{% else %}priority-low{% endif %}">
+                        <div class="task-checkbox">
+                            <input type="checkbox" id="task-{{ tarea.id }}">
+                            <label for="task-{{ tarea.id }}"></label>
+                        </div>
+                        <div class="task-content">
+                            <h4>{{ tarea.titulo }}</h4>
+                            <p>{{ tarea.descripcion|truncatechars:50 }}</p>
+                            <span class="task-due">Vence: {{ tarea.fecha_vencimiento|date:"d/m/Y" }}</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="text-center mt-2">
+                    <a href="#" class="btn btn-sm">Ver todas las tareas</a>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-tasks"></i>
+                    <p>No hay tareas pendientes.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

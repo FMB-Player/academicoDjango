@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+
+{% load static %}
+
+{% block extra_css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'core/css/dashboard.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="{% static 'core/js/dashboard.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>{% block dashboard_title %}Panel de Control{% endblock %}</h1>
+        <p>{% block dashboard_subtitle %}Bienvenido al panel de control{% endblock %}</p>
+    </div>
+    
+    {% block dashboard_content %}
+    <!-- Dashboard content will be inserted here by child templates -->
+    {% endblock %}
+</div>
+{% endblock %}

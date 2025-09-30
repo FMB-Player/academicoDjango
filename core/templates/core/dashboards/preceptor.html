@@ -1,0 +1,382 @@
+{% extends 'core/dashboards/base_dashboard.html' %}
+
+{% block dashboard_title %}Panel del Preceptor{% endblock %}
+
+{% block dashboard_subtitle %}
+Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apellido }}{% else %}{{ user.email }}{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-grid">
+    <!-- Resumen de Asistencia -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2><i class="fas fa-clipboard-check"></i> Asistencia del Día</h2>
+        </div>
+        <div class="card-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ asistencia_hoy.presentes|default:0 }}</div>
+                    <div class="stat-label">Presentes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-warning">{{ asistencia_hoy.tardanzas|default:0 }}</div>
+                    <div class="stat-label">Tardanzas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-danger">{{ asistencia_hoy.ausentes|default:0 }}</div>
+                    <div class="stat-label">Ausentes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ asistencia_hoy.total|default:0 }}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <a href="{% url 'core:tomar_asistencia' %}" class="btn btn-primary btn-sm">Tomar Asistencia</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas Novedades -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2><i class="fas fa-bell"></i> Últimas Novedades</h2>
+            <a href="{% url 'core:novedades' %}" class="btn btn-sm">Ver todas</a>
+        </div>
+        <div class="card-content">
+            {% if novedades %}
+                <ul class="novedades-list">
+                    {% for novedad in novedades|slice:":3" %}
+                    <li class="novedad-item">
+                        <div class="novedad-icon">
+                            <i class="fas fa-{{ novedad.icono }}"></i>
+                        </div>
+                        <div class="novedad-content">
+                            <h4>{{ novedad.titulo }}</h4>
+                            <p>{{ novedad.descripcion }}</p>
+                            <span class="novedad-time">{{ novedad.fecha|timesince }} atrás</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="text-center mt-2">
+                    <a href="{% url 'core:novedades' %}" class="btn btn-sm">Ver todas las novedades</a>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-bell"></i>
+                    <p>No hay novedades recientes.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Alumnos con Inasistencias -->
+    <div class="dashboard-card wide">
+        <div class="card-header">
+            <h2><i class="fas fa-user-clock"></i> Alumnos con Inasistencias</h2>
+            <a href="{% url 'core:informe_inasistencias' %}" class="btn btn-sm">Ver informe completo</a>
+        </div>
+        <div class="card-content">
+            {% if alumnos_inasistencias %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Alumno</th>
+                                <th>Curso</th>
+                                <th>Inasistencias</th>
+                                <th>Última Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alumno in alumnos_inasistencias|slice:":5" %}
+                            <tr>
+                                <td>{{ alumno.nombre_completo }}</td>
+                                <td>{{ alumno.curso }}</td>
+                                <td>
+                                    <span class="badge badge-danger">{{ alumno.inasistencias_totales }}</span>
+                                </td>
+                                <td>{{ alumno.ultima_fecha|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="{% url 'core:detalle_alumno' alumno.id %}" class="btn btn-sm btn-icon" title="Ver detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'core:notificar_alumno' alumno.id %}" class="btn btn-sm btn-icon" title="Notificar">
+                                        <i class="fas fa-envelope"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if alumnos_inasistencias|length > 5 %}
+                <div class="text-center mt-2">
+                    <a href="{% url 'core:informe_inasistencias' %}" class="btn btn-sm">Ver más alumnos</a>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-user-check"></i>
+                    <p>No hay alumnos con inasistencias recientes.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Próximos Eventos -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2><i class="far fa-calendar-alt"></i> Próximos Eventos</h2>
+            <a href="#" class="btn btn-sm">Ver calendario</a>
+        </div>
+        <div class="card-content">
+            {% if proximos_eventos %}
+                <ul class="event-list">
+                    {% for evento in proximos_eventos|slice:":3" %}
+                    <li class="event-item">
+                        <div class="event-date">
+                            <span class="event-day">{{ evento.fecha|date:"d" }}</span>
+                            <span class="event-month">{{ evento.fecha|date:"M" }}</span>
+                        </div>
+                        <div class="event-details">
+                            <h4>{{ evento.titulo }}</h4>
+                            <p>{{ evento.descripcion|truncatechars:30 }}</p>
+                            <span class="event-time">{{ evento.fecha|date:"H:i" }} - {{ evento.lugar }}</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="empty-state">
+                    <i class="far fa-calendar-alt"></i>
+                    <p>No hay eventos próximos.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Additional Styles -->
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.text-warning {
+    color: #d69e2e;
+}
+
+.text-danger {
+    color: #e53e3e;
+}
+
+.text-success {
+    color: #38a169;
+}
+
+.novedades-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.novedad-item {
+    display: flex;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.novedad-item:last-child {
+    border-bottom: none;
+}
+
+.novedad-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f0f4f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+    color: var(--primary-color);
+}
+
+.novedad-content {
+    flex: 1;
+}
+
+.novedad-content h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.novedad-content p {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.novedad-time {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+table th,
+table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+}
+
+table th {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-light);
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-danger {
+    background-color: #fff5f5;
+    color: #e53e3e;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+}
+
+.btn-icon:hover {
+    background: #f8f9fa;
+    color: var(--primary-color);
+}
+
+.event-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.event-item {
+    display: flex;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.event-item:last-child {
+    border-bottom: none;
+}
+
+.event-date {
+    text-align: center;
+    margin-right: 1rem;
+    min-width: 50px;
+}
+
+.event-day {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--primary-color);
+}
+
+.event-month {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-light);
+}
+
+.event-details h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.95rem;
+}
+
+.event-details p {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.event-time {
+    font-size: 0.75rem;
+    color: var(--text-light);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 1.5rem 0;
+    color: var(--text-light);
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #e2e8f0;
+    display: block;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Mi Perfil - Sistema Académico{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="card">
+        <h2>Mi Perfil</h2>
+        
+        <div class="profile-info">
+            <div class="profile-field">
+                <span class="field-label">Nombre:</span>
+                <span class="field-value">
+                    {% if user.nombre or user.apellido %}
+                        {{ user.nombre }} {{ user.apellido }}
+                    {% else %}
+                        No especificado
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="profile-field">
+                <span class="field-label">Email:</span>
+                <span class="field-value">{{ user.email }}</span>
+            </div>
+            
+            <div class="profile-field">
+                <span class="field-label">DNI:</span>
+                <span class="field-value">
+                    *****{{ user.dni|stringformat:"s"|slice:"-3:"|default:"" }}
+                </span>
+            </div>
+            
+            <div class="profile-field">
+                <span class="field-label">Rol:</span>
+                <span class="field-value">{{ user.get_rol_display }}</span>
+            </div>
+            
+            {% if user.fecha_nacimiento %}
+            <div class="profile-field">
+                <span class="field-label">Fecha de Nacimiento:</span>
+                <span class="field-value">{{ user.fecha_nacimiento|date:"d/m/Y" }}</span>
+            </div>
+            {% endif %}
+            
+            {% if user.telefono %}
+            <div class="profile-field">
+                <span class="field-label">Teléfono:</span>
+                <span class="field-value">{{ user.telefono }}</span>
+            </div>
+            {% endif %}
+            
+            {% if user.direccion %}
+            <div class="profile-field">
+                <span class="field-label">Dirección:</span>
+                <span class="field-value">{{ user.direccion }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="profile-actions">
+            <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">Cambiar Contraseña</a>
+            <a href="{% url 'core:editar_perfil' %}" class="btn btn-primary">Editar Perfil</a>
+        </div>
+    </div>
+    
+    {% if user.rol == 'ALUMNO' %}
+    <div class="card">
+        <h3>Mis Carreras</h3>
+        {% if user.carreras_inscripciones.activas.exists %}
+            <ul class="list">
+                {% for inscripcion in user.carreras_inscripciones.activas %}
+                <li>{{ inscripcion.carrera.nombre }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No estás inscripto en ninguna carrera.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-info {
+    margin: 1.5rem 0;
+}
+
+.profile-field {
+    display: flex;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.field-label {
+    font-weight: 600;
+    width: 200px;
+    color: #4b5563;
+}
+
+.field-value {
+    flex: 1;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.list {
+    list-style: none;
+    padding: 0;
+}
+
+.list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.list li:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
