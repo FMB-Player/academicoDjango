@@ -47,8 +47,8 @@ class UsuarioAdmin(UserAdmin):
 
 
 class CarreraAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'duracion', 'cupo_maximo', 'activa', 'alumnos_inscriptos')
-    list_filter = ('activa',)
+    list_display = ('nombre', 'duracion', 'cupo_maximo', 'is_active', 'alumnos_inscriptos')
+    list_filter = ('is_active',)
     search_fields = ('nombre',)
     actions = ['activar_carreras', 'desactivar_carreras']
     
@@ -58,12 +58,12 @@ class CarreraAdmin(admin.ModelAdmin):
     
     @admin.action(description=_('Activar carreras seleccionadas'))
     def activar_carreras(self, request, queryset):
-        updated = queryset.update(activa=True)
+        updated = queryset.update(is_active=True)
         self.message_user(request, f"{updated} carreras activadas correctamente.")
     
     @admin.action(description=_('Desactivar carreras seleccionadas'))
     def desactivar_carreras(self, request, queryset):
-        updated = queryset.update(activa=False)
+        updated = queryset.update(is_active=False)
         self.message_user(request, f"{updated} carreras desactivadas correctamente.")
     
     def has_delete_permission(self, request, obj=None):
@@ -73,8 +73,8 @@ class CarreraAdmin(admin.ModelAdmin):
 
 
 class MateriaAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'carrera', 'docente', 'cupo_disponible', 'activa')
-    list_filter = ('carrera', 'activa')
+    list_display = ('nombre', 'carrera', 'docente', 'cupo_disponible', 'is_active')
+    list_filter = ('carrera', 'is_active')
     search_fields = ('nombre', 'carrera__nombre', 'docente__apellido', 'docente__nombre')
     list_select_related = ('carrera', 'docente')
     raw_id_fields = ('docente',)
@@ -86,12 +86,12 @@ class MateriaAdmin(admin.ModelAdmin):
     
     @admin.action(description=_('Activar materias seleccionadas'))
     def activar_materias(self, request, queryset):
-        updated = queryset.update(activa=True)
+        updated = queryset.update(is_active=True)
         self.message_user(request, f"{updated} materias activadas correctamente.")
     
     @admin.action(description=_('Desactivar materias seleccionadas'))
     def desactivar_materias(self, request, queryset):
-        updated = queryset.update(activa=False)
+        updated = queryset.update(is_active=False)
         self.message_user(request, f"{updated} materias desactivadas correctamente.")
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -106,8 +106,8 @@ class MateriaAdmin(admin.ModelAdmin):
 
 
 class InscripcionAdmin(admin.ModelAdmin):
-    list_display = ('alumno', 'materia', 'fecha_inscripcion', 'activa')
-    list_filter = ('materia__carrera', 'activa')
+    list_display = ('alumno', 'materia', 'fecha_inscripcion', 'is_active')
+    list_filter = ('materia__carrera', 'is_active')
     search_fields = (
         'alumno__dni', 'alumno__apellido', 'alumno__nombre',
         'materia__nombre', 'materia__carrera__nombre'
@@ -119,18 +119,18 @@ class InscripcionAdmin(admin.ModelAdmin):
     
     @admin.action(description=_('Activar inscripciones seleccionadas'))
     def activar_inscripciones(self, request, queryset):
-        updated = queryset.update(activa=True)
+        updated = queryset.update(is_active=True)
         self.message_user(request, f"{updated} inscripciones activadas correctamente.")
     
     @admin.action(description=_('Desactivar inscripciones seleccionadas'))
     def desactivar_inscripciones(self, request, queryset):
-        updated = queryset.update(activa=False)
+        updated = queryset.update(is_active=False)
         self.message_user(request, f"{updated} inscripciones desactivadas correctamente.")
 
 
 class InscripcionCarreraAdmin(admin.ModelAdmin):
-    list_display = ('alumno', 'carrera', 'fecha_inscripcion', 'activa')
-    list_filter = ('carrera', 'activa')
+    list_display = ('alumno', 'carrera', 'fecha_inscripcion', 'is_active')
+    list_filter = ('carrera', 'is_active')
     search_fields = (
         'alumno__dni', 'alumno__apellido', 'alumno__nombre',
         'carrera__nombre'
@@ -142,12 +142,12 @@ class InscripcionCarreraAdmin(admin.ModelAdmin):
     
     @admin.action(description=_('Activar inscripciones seleccionadas'))
     def activar_inscripciones(self, request, queryset):
-        updated = queryset.update(activa=True)
+        updated = queryset.update(is_active=True)
         self.message_user(request, f"{updated} inscripciones activadas correctamente.")
     
     @admin.action(description=_('Desactivar inscripciones seleccionadas'))
     def desactivar_inscripciones(self, request, queryset):
-        updated = queryset.update(activa=False)
+        updated = queryset.update(is_active=False)
         self.message_user(request, f"{updated} inscripciones desactivadas correctamente.")
 
 
