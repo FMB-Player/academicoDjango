@@ -2,6 +2,7 @@
 URL configuration for academico URL Configuration
 """
 from django.contrib import admin
+from core.admin import custom_admin_site
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
@@ -19,8 +20,8 @@ handler404 = 'core.views.handler404'
 handler500 = 'core.views.handler500'
 
 urlpatterns = [
-    # Admin
-    path('admin/', admin.site.urls),
+    # Admin - Using custom admin site that shows 403 for non-staff users
+    path('admin/', custom_admin_site.urls),
     
     # Core app
     path('', include('core.urls')),
