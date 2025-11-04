@@ -1,7 +1,63 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
+from django.http import HttpResponseForbidden
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.views import redirect_to_login
+from django.urls import reverse
 from .models import Usuario, Carrera, Materia, Inscripcion, InscripcionCarrera
+
+
+class CustomAdminSite(admin.AdminSite):
+    """Custom admin site that shows 403 for non-staff users."""
+    
+    @never_cache
+    def login(self, request, extra_context=None):
+        """
+        Override the login view to redirect non-staff users to 404.
+        """
+        if not request.user.is_authenticated:
+            return redirect_to_login(
+                request.get_full_path(),
+                self.login_url or reverse('admin:login', current_app=self.name)
+            )
+        if not request.user.is_staff:
+            return HttpResponseForbidden(
+                'You do not have permission to access this page.',
+                content_type='text/plain'
+            )
+        return super().login(request, extra_context)
+    
+    def admin_view(self, view, cacheable=False):
+        """
+        Override admin_view to check for staff status.
+        """
+        def inner(request, *args, **kwargs):
+            if not self.has_permission(request):
+                # For non-staff users, show 404 for masking
+                from django.views.defaults import permission_denied
+                return permission_denied(request, None, template_name='core/errors/404.html')
+            
+            return view(request, *args, **kwargs)
+        
+        if not cacheable:
+            inner = never_cache(inner)
+        # Mark the view with the admin's name for backwards compatibility.
+        if not getattr(view, 'csrf_exempt', False):
+            inner = csrf_protect(inner)
+        return inner
+    
+    def logout(self, request, extra_context=None):
+        """
+        Override the logout view to redirect to home page.
+        """
+        from django.contrib.auth import logout
+        from django.http import HttpResponseRedirect
+        
+        logout(request)
+        return HttpResponseRedirect('/')
 
 
 class UsuarioAdmin(UserAdmin):
@@ -151,9 +207,15 @@ class InscripcionCarreraAdmin(admin.ModelAdmin):
         self.message_user(request, f"{updated} inscripciones desactivadas correctamente.")
 
 
-# Register models with their admin classes
-admin.site.register(Usuario, UsuarioAdmin)
-admin.site.register(Carrera, CarreraAdmin)
-admin.site.register(Materia, MateriaAdmin)
-admin.site.register(Inscripcion, InscripcionAdmin)
-admin.site.register(InscripcionCarrera, InscripcionCarreraAdmin)
+# Create custom admin site instance
+custom_admin_site = CustomAdminSite(name='customadmin')
+
+# Register Group model with custom admin site
+custom_admin_site.register(Group, GroupAdmin)
+
+# Register models with the custom admin site
+custom_admin_site.register(Usuario, UsuarioAdmin)
+custom_admin_site.register(Carrera, CarreraAdmin)
+custom_admin_site.register(Materia, MateriaAdmin)
+custom_admin_site.register(Inscripcion, InscripcionAdmin)
+custom_admin_site.register(InscripcionCarrera, InscripcionCarreraAdmin)
