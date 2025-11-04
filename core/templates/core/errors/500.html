@@ -2,61 +2,22 @@
 
 {% block title %}Error del Servidor - Error 500{% endblock %}
 
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'core/css/errors.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="error-container">
     <div class="error-card">
-        <h1>500</h1>
+        <h1 class="color-error">500</h1>
         <h2>Error del Servidor</h2>
         <p>¡Vaya! Algo salió mal en nuestro servidor. Nuestro equipo ha sido notificado y estamos trabajando para solucionarlo.</p>
         <div class="error-actions">
-            <a href="{% url 'home' %}" class="btn btn-primary">Ir al Inicio</a>
+            <a href="{% url 'core:home' %}" class="btn btn-primary">Ir al Inicio</a>
             <a href="javascript:window.location.reload()" class="btn">Recargar Página</a>
         </div>
     </div>
 </div>
-
-<style>
-.error-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 70vh;
-    padding: 2rem;
-}
-
-.error-card {
-    text-align: center;
-    max-width: 500px;
-    width: 100%;
-}
-
-.error-card h1 {
-    font-size: 6rem;
-    margin: 0;
-    color: var(--error);
-    line-height: 1;
-}
-
-.error-card h2 {
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.error-actions {
-    margin-top: 2rem;
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-}
-
-@media (max-width: 480px) {
-    .error-actions {
-        flex-direction: column;
-    }
-    
-    .error-actions .btn {
-        width: 100%;
-    }
-}
-</style>
 {% endblock %}
