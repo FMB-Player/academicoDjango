@@ -29,13 +29,13 @@ Sistema de gestión académica desarrollado con Django.
 1. Clonar el repositorio:
    ```bash
    git clone [url-del-repositorio]
-   cd academico
+   cd [nombre-del-repositorio]
    ```
 
 2. Crear un entorno virtual:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # En Windows: venv\Scripts\activate
+   "venv\Scripts\activate"  # En Linux: venv/bin/activate
    ```
 
 3. Instalar dependencias:
@@ -50,8 +50,8 @@ Sistema de gestión académica desarrollado con Django.
 4. Configurar variables de entorno:
    ```bash
    cp .env.example .env
-   # Editar .env con tus configuraciones
    ```
+   Mientras sigas el formato dado, puedes cambiar todas las variables a tu gusto. Esto es importante si quieres usar el entorno de debug. El default si no haces este paso irá directamente a "producción"
 
 5. Aplicar migraciones:
    ```bash
@@ -62,8 +62,9 @@ Sistema de gestión académica desarrollado con Django.
    ```bash
    python manage.py createsuperuser
    ```
+   Sigue las instrucciones y crea UN superusuario. Los otros usuarios NO tendrán los mismos permisos que el superusuario y deben ser configurados, puedes ver más a detalle deswde el admin panel una vez que actives el servidor.
 
-7. Iniciar el servidor de desarrollo:
+7. Iniciar el servidor:
    ```bash
    python manage.py runserver
    ```
@@ -72,28 +73,34 @@ Sistema de gestión académica desarrollado con Django.
 
 ```
 academico/
+├── academico/                # Configuración del proyecto
+|   ├── settings.py           # Configuración
+|   └── ...
 ├── core/                      # Aplicación principal
 │   ├── migrations/            # Migraciones de la base de datos
 │   ├── static/                # Archivos estáticos (CSS, JS, imágenes)
-│   │   ├── core/
-│   │   │   ├── css/          # Estilos CSS
-│   │   │   ├── js/           # JavaScript
-│   │   │   └── images/       # Imágenes
-│   ├── templates/             # Plantillas HTML
-│   │   ├── core/             # Plantillas de la aplicación core
-│   │   │   ├── dashboards/   # Plantillas de dashboards
-│   │   │   ├── errors/       # Plantillas de errores
-│   │   │   └── ...
+│   │   └── core/
+│   │       ├── css/          # Estilos CSS
+│   │       └── js/           # JavaScript
+│   ├── templates/            # Plantillas HTML
+│   │   └── core/             # Plantillas de la aplicación core
+|   |       ├── auth          # Formularios y detalles
+│   │       ├── dashboards/   # Plantillas de dashboards
+│   │       ├── errors/       # Plantillas de errores
+|   |       └── ...
 │   ├── templatetags/         # Etiquetas personalizadas
+|   ├── tests/                # Testing
 │   ├── __init__.py
 │   ├── admin.py
 │   ├── apps.py
 │   ├── models.py
 │   ├── urls.py
-│   └── views.py
-├── academico/                # Configuración del proyecto
+│   ├── views.py
+|   └── ...
 ├── manage.py
-└── requirements.txt          # Dependencias
+├── requirements-dev.txt      # Dependencias del entorno de desarrollo
+├── requirements.txt          # Dependencias
+└── ...
 ```
 
 <!-- ## Personalización
@@ -141,6 +148,28 @@ DEBUG=False
 SECRET_KEY=tu-clave-secreta-segura
 ALLOWED_HOSTS=.tudominio.com
 ``` -->
+
+## Gestión de Archivos Estáticos
+
+### Estructura de Directorios
+
+- `core/static/core/`: Contiene los archivos estáticos personalizados (CSS, JS, imágenes).
+  - `css/`: Hojas de estilo personalizadas
+  - `js/`: Scripts JavaScript personalizados
+  - `images/`: Imágenes y recursos gráficos
+
+### Desarrollo
+
+En desarrollo, Django sirve automáticamente los archivos estáticos cuando `DJANGO_DEBUG=True`.
+
+### Producción
+
+En producción, corre el siguiente código antes de activar el servidor:
+   ```bash
+   python manage.py collectstatic
+   ```
+   Esto copiará todos los archivos estáticos al directorio `STATIC_ROOT` (por defecto `staticfiles/`) y permitirá usar los recursos especializados.
+   Finalmente, cambia la variable de .env a cualquier cosa que no sea `True` (o por extensión deja vacío) para poder iniciar el servidor en producción. Esto obviamente evitará que ante errores se muestre el monitor de debuggeo.
 
 ## Licencia
 
