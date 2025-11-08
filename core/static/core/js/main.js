@@ -128,3 +128,20 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('load', function() {
     document.body.classList.add('loaded');
 });
+
+function activePage() {
+    const links = document.querySelectorAll('.nav-links a');
+    const currentUrl = window.location.pathname;
+
+    links.forEach(link => {
+        let href = link.getAttribute('href');
+
+        if (href === currentUrl) {
+            link.classList.add('nav-link-active');
+        } else {
+            link.classList.remove('nav-link-active');
+        }
+    });
+}
+
+activePage();

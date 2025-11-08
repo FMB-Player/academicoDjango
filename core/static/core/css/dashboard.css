@@ -43,7 +43,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background-color: rgba(var(--primary-rgb), 0.1);
+    background-color: var(--primary-shy);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -71,7 +71,7 @@
 
 .novedad-time {
     font-size: 0.75rem;
-    color: var(--text-lighter);
+    color: var(--text-light);
     margin-top: 0.25rem;
     display: flex;
     align-items: center;
@@ -115,7 +115,7 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background-color: rgba(var(--primary-rgb), 0.1);
+    background-color: var(--primary-shy);
     display: flex;
     align-items: center;
     justify-content: center;

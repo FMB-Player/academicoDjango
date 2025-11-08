@@ -5,7 +5,7 @@
     align-items: center;
     min-height: 70vh;
     padding: 2rem;
-    background-color: #f8f9fa;
+    background-color: var(--fake-white);
 }
 
 .error-card {

@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initDashboardCharts();
     initDashboardTabs();
     initTooltips();
+    initViewDetailsButtons();
 });
 
 /**
@@ -152,6 +153,20 @@ function updateDashboardStats(url) {
     })
     .catch(error => {
         console.error('Error fetching dashboard stats:', error);
+    });
+}
+
+/**
+ * Initialize click handlers for view details buttons
+ */
+function initViewDetailsButtons() {
+    document.querySelectorAll('.view-details').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
     });
 }
 
