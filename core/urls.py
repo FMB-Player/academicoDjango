@@ -45,9 +45,23 @@ urlpatterns = [
     # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/admin/', views.admin_dashboard, name='admin_dashboard'),
+    
+    # Docente URLs
     path('dashboard/docente/', views.docente_dashboard, name='docente_dashboard'),
     path('dashboard/docente/mis-materias/', views.mis_materias, name='mis_materias'),
+    path('dashboard/docente/materia/<int:materia_id>/', views.detalle_materia, name='detalle_materia'),
+    path('dashboard/docente/materia/<int:materia_id>/asistencia/', views.tomar_asistencia, name='tomar_asistencia'),
+    
+    # Alumno URLs
     path('dashboard/alumno/', views.alumno_dashboard, name='alumno_dashboard'),
+    path('dashboard/alumno/inscripciones/', views.materias_inscripcion, name='materias_inscripcion'),
+    
+    # Preceptor URLs
+    path('dashboard/preceptor/', views.preceptor_dashboard, name='preceptor_dashboard'),
+    path('dashboard/preceptor/novedades/', views.novedades, name='novedades'),
+    path('dashboard/preceptor/informe-inasistencias/', views.informe_inasistencias, name='informe_inasistencias'),
+    path('dashboard/preceptor/alumno/<int:alumno_id>/', views.detalle_alumno, name='detalle_alumno'),
+    path('dashboard/preceptor/alumno/<int:alumno_id>/notificar/', views.notificar_alumno, name='notificar_alumno'),
     path('dashboard/preceptor/', views.preceptor_dashboard, name='preceptor_dashboard'),
 ]
 
