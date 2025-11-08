@@ -114,13 +114,17 @@ class Carrera(models.Model):
 
 
 class Materia(models.Model):
-    """Represents a course/subject."""
-    nombre = models.CharField(_('nombre'), max_length=100)
-    carrera = models.ForeignKey(
+    """Represents a course/subject that can belong to multiple carreras."""
+    nombre = models.CharField(
+        _('nombre'), 
+        max_length=100,
+        unique=True,
+        help_text=_('Nombre único de la materia')
+    )
+    carreras = models.ManyToManyField(
         Carrera,
-        on_delete=models.CASCADE,
         related_name='materias',
-        verbose_name=_('carrera')
+        verbose_name=_('carreras')
     )
     docente = models.ForeignKey(
         'core.Usuario',
@@ -133,18 +137,21 @@ class Materia(models.Model):
     )
     cupo_maximo = models.PositiveSmallIntegerField(
         _('cupo máximo de alumnos'),
-        default=30
+        default=30,
+        help_text=_('Número máximo de alumnos que pueden inscribirse a esta materia')
     )
     is_active = models.BooleanField(_('activa'), default=True)
     
     class Meta:
         verbose_name = _('materia')
         verbose_name_plural = _('materias')
-        ordering = ['carrera', 'nombre']
-        unique_together = ['nombre', 'carrera']
+        ordering = ['nombre']
     
     def __str__(self):
-        return f"{self.nombre} ({self.carrera})"
+        carreras = ", ".join(str(carrera) for carrera in self.carreras.all()[:3])
+        if self.carreras.count() > 3:
+            carreras += "..."
+        return f"{self.nombre} ({carreras})"
     
     def puede_eliminarse(self):
         """Check if the subject can be deleted."""
