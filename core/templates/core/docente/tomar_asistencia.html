@@ -1,0 +1,29 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Tomar Asistencia: {{ materia.nombre }}</h2>
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Vista de prueba - Funcionalidad de asistencia en desarrollo
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4>Lista de Estudiantes</h4>
+        </div>
+        <div class="card-body">
+            <p>Aquí se mostrará la lista de estudiantes para tomar asistencia.</p>
+            <p>Fecha: <strong>{% now "d/m/Y" %}</strong></p>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <button class="btn btn-success" disabled>
+            <i class="fas fa-save"></i> Guardar Asistencia
+        </button>
+        <a href="{% url 'core:detalle_materia' materia.id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+</div>
+{% endblock %}

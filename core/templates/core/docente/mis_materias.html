@@ -12,10 +12,21 @@
             {% for materia in materias %}
             <div class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-1">{{ materia.nombre }}</h5>
+                    <h5 class="mb-1">
+                        <a href="{% url 'core:detalle_materia' materia.id %}" class="text-decoration-none">
+                            {{ materia.nombre }}
+                        </a>
+                    </h5>
                     <span class="badge bg-primary">Cupo máx: {{ materia.cupo_maximo }}</span>
                 </div>
-                <p class="mb-1 text-muted">Carrera: {{ materia.carrera.nombre }}</p>
+                <p class="mb-1 text-muted">
+                    Carreras: 
+                    {% for carrera in materia.carreras.all %}
+                        {{ carrera.nombre }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                        Sin carreras asignadas
+                    {% endfor %}
+                </p>
                 <small class="text-muted">Inscripciones activas: {{ materia.inscripciones.count }}</small>
             </div>
             {% endfor %}
