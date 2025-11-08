@@ -2,6 +2,8 @@
 
 {% block title %}Mi Perfil - Sistema Académico{% endblock %}
 
+{% load custom_tags %}
+
 {% block content %}
 <div class="profile-container">
     <div class="card">
@@ -21,7 +23,9 @@
             
             <div class="profile-field">
                 <span class="field-label">Email:</span>
-                <span class="field-value">{{ user.email }}</span>
+                <span class="field-value">
+                    {{ user.email|mask_email}}
+                </span>
             </div>
             
             <div class="profile-field">
@@ -31,10 +35,12 @@
                 </span>
             </div>
             
-            <div class="profile-field">
+            <!-- <div class="profile-field">
                 <span class="field-label">Rol:</span>
                 <span class="field-value">{{ user.get_rol_display }}</span>
-            </div>
+            </div> -->
+            <!-- I don't know how smart it is to show level.
+             Keep the code, butt do not display -->
             
             {% if user.fecha_nacimiento %}
             <div class="profile-field">
@@ -74,7 +80,10 @@
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No estás inscripto en ninguna carrera.</p>
+            <p>
+                No estás inscrito en ninguna carrera.
+                <a href="{% url 'core:inscribirse_carrera' %}" class="btn btn-primary">Inscribirse</a>
+            </p>
         {% endif %}
     </div>
     {% endif %}
