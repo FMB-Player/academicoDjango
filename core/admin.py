@@ -129,49 +129,64 @@ class CarreraAdmin(admin.ModelAdmin):
 
 
 class MateriaAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'carrera', 'docente', 'cupo_disponible', 'is_active')
-    list_filter = ('carrera', 'is_active')
-    search_fields = ('nombre', 'carrera__nombre', 'docente__apellido', 'docente__nombre')
-    list_select_related = ('carrera', 'docente')
+    list_display = ('nombre', 'mostrar_carreras', 'docente', 'cupo_disponible', 'is_active')
+    list_filter = ('carreras', 'is_active')
+    search_fields = ('nombre', 'carreras__nombre', 'docente__apellido', 'docente__nombre')
+    filter_horizontal = ('carreras',)
+    list_select_related = ('docente',)
     raw_id_fields = ('docente',)
     actions = ['activar_materias', 'desactivar_materias']
+    
+    def mostrar_carreras(self, obj):
+        return ", ".join([c.nombre for c in obj.carreras.all()])
+    mostrar_carreras.short_description = _('Carreras')
     
     def cupo_disponible(self, obj):
         return f"{obj.inscripciones.activas().count()} / {obj.cupo_maximo}"
     cupo_disponible.short_description = _('Cupo')
     
-    @admin.action(description=_('Activar materias seleccionadas'))
     def activar_materias(self, request, queryset):
         updated = queryset.update(is_active=True)
         self.message_user(request, f"{updated} materias activadas correctamente.")
+    activar_materias.short_description = _("Activar materias seleccionadas")
     
-    @admin.action(description=_('Desactivar materias seleccionadas'))
     def desactivar_materias(self, request, queryset):
         updated = queryset.update(is_active=False)
         self.message_user(request, f"{updated} materias desactivadas correctamente.")
+    desactivar_materias.short_description = _("Desactivar materias seleccionadas")
     
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'docente':
-            kwargs['queryset'] = Usuario.objects.filter(rol=Usuario.Rol.DOCENTE)
+            kwargs['queryset'] = Usuario.objects.filter(rol=Usuario.Rol.DOCENTE, is_active=True)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
     
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'carreras':
+            kwargs['queryset'] = Carrera.objects.filter(is_active=True)
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+    
     def has_delete_permission(self, request, obj=None):
-        if obj and not obj.puede_eliminarse():
+        # Solo permitir eliminar si no hay inscripciones activas
+        if obj and obj.inscripciones.activas().exists():
             return False
         return super().has_delete_permission(request, obj)
 
 
 class InscripcionAdmin(admin.ModelAdmin):
-    list_display = ('alumno', 'materia', 'fecha_inscripcion', 'is_active')
-    list_filter = ('materia__carrera', 'is_active')
+    list_display = ('alumno', 'materia', 'carreras_materia', 'fecha_inscripcion', 'is_active')
+    list_filter = ('materia__carreras', 'is_active')
     search_fields = (
         'alumno__dni', 'alumno__apellido', 'alumno__nombre',
-        'materia__nombre', 'materia__carrera__nombre'
+        'materia__nombre', 'materia__carreras__nombre'
     )
-    list_select_related = ('alumno', 'materia', 'materia__carrera')
+    list_select_related = ('alumno', 'materia')
     raw_id_fields = ('alumno', 'materia')
     date_hierarchy = 'fecha_inscripcion'
     actions = ['activar_inscripciones', 'desactivar_inscripciones']
+    
+    def carreras_materia(self, obj):
+        return ", ".join([c.nombre for c in obj.materia.carreras.all()])
+    carreras_materia.short_description = _('Carreras')
     
     @admin.action(description=_('Activar inscripciones seleccionadas'))
     def activar_inscripciones(self, request, queryset):
