@@ -21,7 +21,7 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
                         <thead>
                             <tr>
                                 <th>Materia</th>
-                                <th>Carrera</th>
+                                <th>Carreras</th>
                                 <th>Alumnos</th>
                                 <th>Cupo máx.</th>
                                 <th>Estado</th>
@@ -32,7 +32,13 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
                             {% for materia in materias|slice:":5" %}
                             <tr>
                                 <td>{{ materia.nombre }}</td>
-                                <td>{{ materia.carrera.nombre }}</td>
+                                <td>
+                                    {% for carrera in materia.carreras.all %}
+                                        {{ carrera.nombre }}{% if not forloop.last %}<br>{% endif %}
+                                    {% empty %}
+                                        Sin carreras
+                                    {% endfor %}
+                                </td>
                                 <td>{{ materia.inscripciones.count }}</td>
                                 <td>{{ materia.cupo_maximo }}</td>
                                 <td>
@@ -43,7 +49,9 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-icon" title="Ver detalles" disabled>
+                                    <button class="btn btn-sm btn-icon view-details" 
+                                            title="Ver detalles" 
+                                            data-url="{% url 'core:detalle_materia' materia.id %}">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button class="btn btn-sm btn-icon" title="Tomar asistencia" disabled>
