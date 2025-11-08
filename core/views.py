@@ -162,59 +162,70 @@ def preceptor_dashboard(request):
 
 @login_required
 @docente_required
-def mis_materias(request):
+def docente_mis_materias(request):
     """
     Lista las materias asignadas al docente autenticado.
     """
-    # Check if user has the DOCENTE role
-    if request.user.rol != Usuario.Rol.DOCENTE:
-        messages.error(request, 'No tienes permiso para acceder a esta sección.')
-        return redirect('core:home')
-    
-    # Get all active subjects for the current teacher with related data
-    materias = Materia.objects.filter(
-        docente=request.user,
-        is_active=True
-    ).prefetch_related('carreras')
-    
-    # Annotate with the count of active enrollments
-    materias = materias.annotate(
-        num_alumnos=Count('inscripciones', filter=Q(inscripciones__is_active=True))
-    )
-    
-    context = {
-        'materias': materias,
-    }
-    return render(request, 'core/docente/mis_materias.html', context)
+    try:
+        # Obtener solo las materias activas del docente actual con prefetch_related para carreras
+        materias = Materia.objects.filter(
+            docente=request.user,
+            is_active=True
+        ).prefetch_related('carreras')
+        
+        # Anotar el número de alumnos activos en cada materia
+        materias = materias.annotate(
+            num_alumnos=Count('inscripciones', filter=Q(inscripciones__is_active=True))
+        )
+        
+        # Ordenar por nombre de materia
+        materias = materias.order_by('nombre')
+        
+        context = {
+            'materias': materias,
+            'title': 'Mis Materias',
+        }
+        
+        return render(request, 'core/docente/mis_materias.html', context)
+        
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error en mis_materias (docente): {str(e)}")
+        messages.error(request, 'Ocurrió un error al cargar las materias. Por favor, intente nuevamente.')
+        return redirect('core:docente_dashboard')
 
 
 @login_required
 @docente_required
-def detalle_materia(request, materia_id):
+def docente_detalle_materia(request, materia_id):
     """
     Muestra el detalle de una materia específica para el docente.
     """
-    # Get the subject with related carreras, ensuring it belongs to the current docente
-    materia = get_object_or_404(
-        Materia.objects.prefetch_related('carreras'), 
-        id=materia_id,
-        docente=request.user,
-        is_active=True
-    )
-    
-    # Get active enrollments with student info
-    inscripciones = materia.inscripciones.filter(
-        is_active=True
-    ).select_related('alumno')
-    
-    context = {
-        'materia': materia,
-        'inscripciones': inscripciones,
-        'total_alumnos': inscripciones.count(),
-        'hoy': timezone.now().date()
-    }
-    
-    return render(request, 'core/docente/detalle_materia.html', context)
+    try:
+        # Get the subject with related carreras, ensuring it belongs to the current docente
+        materia = get_object_or_404(
+            Materia.objects.prefetch_related('carreras', 'inscripciones__alumno'),
+            id=materia_id,
+            docente=request.user,
+            is_active=True
+        )
+        
+        # Get active enrollments with student info
+        inscripciones = materia.inscripciones.filter(is_active=True).select_related('alumno')
+        
+        context = {
+            'materia': materia,
+            'inscripciones': inscripciones,
+            'total_alumnos': inscripciones.count(),
+            'hoy': timezone.now().date()
+        }
+        
+        return render(request, 'core/docente/detalle_materia.html', context)
+        
+    except Exception as e:
+        print(f"Error en detalle_materia (docente): {str(e)}")
+        messages.error(request, 'Ocurrió un error al cargar los detalles de la materia.')
+        return redirect('core:docente_mis_materias')
 
 
 @login_required
@@ -250,16 +261,88 @@ def tomar_asistencia(request, materia_id):
     return redirect('core:detalle_materia', materia_id=materia.id)
 
 
+@login_required
+@alumno_required
+def mis_materias(request):
+    """
+    Muestra las materias en las que el alumno está inscripto.
+    """
+    try:
+        # Obtener las materias activas del alumno actual con sus carreras
+        materias = Materia.objects.filter(
+            inscripciones__alumno=request.user,
+            inscripciones__is_active=True,
+            is_active=True
+        ).prefetch_related('carreras').distinct()
+        
+        # Ordenar por nombre de materia
+        materias = materias.order_by('nombre')
+        
+        context = {
+            'materias': materias,
+            'title': 'Mis Materias',
+        }
+        
+        return render(request, 'core/alumno/mis_materias.html', context)
+        
+    except Exception as e:
+        print(f"Error en mis_materias (alumno): {str(e)}")
+        messages.error(request, 'Ocurrió un error al cargar tus materias.')
+        return redirect('core:alumno_dashboard')
+
+
+@login_required
+@alumno_required
+def detalle_materia(request, materia_id):
+    """
+    Muestra el detalle de una materia específica para el alumno.
+    """
+    try:
+        # Verificar que el alumno esté inscripto en la materia
+        materia = get_object_or_404(
+            Materia.objects.prefetch_related('carreras', 'docente'),
+            id=materia_id,
+            inscripciones__alumno=request.user,
+            inscripciones__is_active=True,
+            is_active=True
+        )
+        
+        # Obtener información de la inscripción del alumno
+        inscripcion = materia.inscripciones.get(
+            alumno=request.user,
+            is_active=True
+        )
+        
+        # Calcular porcentaje de asistencia (placeholder)
+        porcentaje_asistencia = 85  # Esto debería calcularse con datos reales
+        
+        # Calcular promedio (placeholder)
+        promedio = 7.5  # Esto debería calcularse con datos reales
+        
+        context = {
+            'materia': materia,
+            'inscripcion': inscripcion,
+            'porcentaje_asistencia': porcentaje_asistencia,
+            'promedio': promedio,
+            'hoy': timezone.now().date()
+        }
+        
+        return render(request, 'core/alumno/detalle_materia.html', context)
+        
+    except Exception as e:
+        print(f"Error en detalle_materia (alumno): {str(e)}")
+        messages.error(request, 'No se pudo cargar la información de la materia.')
+        return redirect('core:mis_materias')
+
+
+@login_required
+@alumno_required
 def materias_inscripcion(request):
     """
     Permite al alumno ver e inscribirse a materias disponibles.
     """
-    if not hasattr(request.user, 'alumno'):
-        messages.error(request, 'Acceso no autorizado.')
-        return redirect('core:home')
-    
-    # Placeholder implementation
-    messages.info(request, 'Vista de inscripción a materias (placeholder)')
+    # Placeholder para la implementación futura
+    messages.info(request, 'Próximamente: Gestión de inscripción a materias')
     return render(request, 'core/alumno/materias_inscripcion.html')
 
 

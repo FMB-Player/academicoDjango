@@ -48,12 +48,14 @@ urlpatterns = [
     
     # Docente URLs
     path('dashboard/docente/', views.docente_dashboard, name='docente_dashboard'),
-    path('dashboard/docente/mis-materias/', views.mis_materias, name='mis_materias'),
-    path('dashboard/docente/materia/<int:materia_id>/', views.detalle_materia, name='detalle_materia'),
+    path('dashboard/docente/mis-materias/', views.docente_mis_materias, name='docente_mis_materias'),
+    path('dashboard/docente/materia/<int:materia_id>/', views.docente_detalle_materia, name='docente_detalle_materia'),
     path('dashboard/docente/materia/<int:materia_id>/asistencia/', views.tomar_asistencia, name='tomar_asistencia'),
     
     # Alumno URLs
     path('dashboard/alumno/', views.alumno_dashboard, name='alumno_dashboard'),
+    path('dashboard/alumno/mis-materias/', views.mis_materias, name='alumno_mis_materias'),
+    path('dashboard/alumno/materia/<int:materia_id>/', views.detalle_materia, name='alumno_detalle_materia'),
     path('dashboard/alumno/inscripciones/', views.materias_inscripcion, name='materias_inscripcion'),
     
     # Preceptor URLs
