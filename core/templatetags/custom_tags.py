@@ -4,6 +4,8 @@ All functionality has been moved to core_tags.py.
 """
 from .core_tags import *  # noqa
 from django import template
+import random
+import string
 
 register = template.Library()
 
@@ -33,3 +35,6 @@ def mask_email(email):
         masked_local = local  # too short to mask
 
     return f"{masked_local}@{domain}"
+
+def fake_code(length:int):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
