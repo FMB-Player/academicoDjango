@@ -7,8 +7,10 @@ from . import views
 app_name = 'core'
 
 urlpatterns = [
-    # Home
+    # Home and Public
     path('', views.home, name='home'),
+    path('carreras/', views.carreras, name='carreras'),
+    path('carreras/inscribir/<int:carrera_id>/', views.inscribir_carrera, name='inscribir_carrera'),
     
     # Authentication
     path('login/', views.login_view, name='login'),
@@ -51,6 +53,7 @@ urlpatterns = [
     path('dashboard/docente/mis-materias/', views.docente_mis_materias, name='docente_mis_materias'),
     path('dashboard/docente/materia/<int:materia_id>/', views.docente_detalle_materia, name='docente_detalle_materia'),
     path('dashboard/docente/materia/<int:materia_id>/asistencia/', views.tomar_asistencia, name='tomar_asistencia'),
+    # REMEMBER. Attendance is a DOCENTE URL.
     
     # Alumno URLs
     path('dashboard/alumno/', views.alumno_dashboard, name='alumno_dashboard'),
