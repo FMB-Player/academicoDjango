@@ -269,6 +269,14 @@ main {
     border: 1px solid #fcd34d;
 }
 
+.text-success {
+    color: #38a169;
+}
+
+.text-danger {
+    color: #e53e3e;
+}
+
 /* Buttons */
 .btn {
     display: inline-block;
@@ -280,7 +288,8 @@ main {
     border: none;
 }
 
-:disabled {
+/* All disabled elements */
+:disabled, [disabled], .disabled, [aria-disabled="true"] {
     cursor: default !important;
     filter: grayscale(90%);
     opacity: 0.6;

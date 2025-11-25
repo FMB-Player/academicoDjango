@@ -1,0 +1,68 @@
+/* Avatar Component */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--light);
+  color: var(--gray-600);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Sizes */
+.avatar-sm {
+  width: 24px;
+  height: 24px;
+  font-size: 0.7rem;
+}
+
+.avatar-md {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.avatar-lg {
+  width: 56px;
+  height: 56px;
+  font-size: 1.5rem;
+}
+
+/* With image */
+.avatar-img {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Status indicator */
+.avatar-status {
+  position: relative;
+}
+
+.avatar-status::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+  background-color: var(--success);
+}
+
+.avatar-status.offline::after {
+  background-color: var(--gray-500);
+}
+
+.avatar-status.busy::after {
+  background-color: var(--danger);
+}
+
+.avatar-status.away::after {
+  background-color: var(--warning);
+}
