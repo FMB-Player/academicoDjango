@@ -10,11 +10,48 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
 
 {% block dashboard_content %}
 <div class="dashboard-grid">
+    <!-- Mis Carreras -->
+    {% if carreras_inscripto %}
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h2><i class="fas fa-graduation-cap"></i> Mis Carreras</h2>
+        </div>
+        <div class="card-content">
+            <ul class="list">
+                {% for carrera in carreras_inscripto %}
+                <li class="list-item">
+                    <div class="list-item-content">
+                        <h4>
+                            <a href="{% url 'core:alumno_mis_materias' %}?carrera={{ carrera.id }}" class="text-dark">
+                                {{ carrera.nombre }}
+                            </a>
+                        </h4>
+                        <p class="text-muted mb-0">
+                            {% if carrera.materias_inscriptas_count > 0 %}
+                                Inscripto en {{ carrera.materias_inscriptas_count }} materia{{ carrera.materias_inscriptas_count|pluralize }}
+                            {% else %}
+                                Sin materias inscriptas
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="list-item-actions">
+                        <a href="{% url 'core:alumno_mis_materias' %}?carrera={{ carrera.id }}" 
+                           class="btn btn-sm">
+                            Ver materias <i class="fas fa-chevron-right ml-1"></i>
+                        </a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Mis Cursos -->
-    <div class="dashboard-card wide">
+    <div class="dashboard-card {% if carreras_inscripto %}wide{% else %}full-width{% endif %}">
         <div class="card-header">
             <h2><i class="fas fa-book-open"></i> Mis Materias</h2>
-            <a href="{% url 'core:materias_inscripcion' %}" class="btn btn-sm">Ver todas</a>
+            <a href="{% url 'core:alumno_mis_materias' %}" class="btn btn-sm">Ver todas</a>
         </div>
         <div class="card-content">
             {% if materias_inscriptas %}
@@ -23,26 +60,44 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
                     <li class="list-item">
                         <div class="list-item-content">
                             <h4>{{ materia.nombre }}</h4>
-                            <p>{{ materia.carrera.nombre }}</p>
+                            <p class="text-muted">
+                                {% for carrera in materia.carreras.all %}
+                                    {{ carrera.nombre }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
+                            {% if materia.docente %}
+                            <small class="text-muted">Docente: 
+                                {% if materia.docente.nombre and materia.docente.apellido %}
+                                    {{ materia.docente.nombre }} 
+                                    {{ materia.docente.apellido }}
+                                {% else %}
+                                    {{ materia.docente.email }}
+                                {% endif %}</small>
+                            {% endif %}
                         </div>
                         <div class="list-item-actions">
-                            <span class="badge {% if materia.estado == 'A' %}badge-success{% elif materia.estado == 'R' %}badge-warning{% else %}badge-info{% endif %}">
-                                {{ materia.get_estado_display }}
-                            </span>
+                            <a href="#" class="btn btn-sm">Ver detalles</a>
+                            <!-- <a href="{% url 'core:alumno_detalle_materia' materia.id %}" class="btn btn-sm">Ver detalles</a> -->
+                             <!-- Por limitaciones de tiempo, vamos a dejar esto como placeholder, JS se encarga de desactivarlo -->
                         </div>
                     </li>
                     {% endfor %}
                 </ul>
                 {% if materias_inscriptas|length > 5 %}
                 <div class="text-center mt-2">
-                    <a href="{% url 'core:materias_inscripcion' %}" class="btn btn-sm">Ver más materias</a>
+                    <a href="{% url 'core:alumno_mis_materias' %}" class="btn btn-sm">Ver más materias</a>
                 </div>
                 {% endif %}
             {% else %}
                 <div class="empty-state">
                     <i class="fas fa-book-open"></i>
-                    <p>No estás inscripto en ninguna materia.</p>
-                    <a href="{% url 'core:materias_inscripcion' %}" class="btn btn-primary mt-2">Inscribirse a materias</a>
+                    <p>No estás inscrito en ninguna materia.</p>
+                    {% if carreras_inscripto %}
+                        <a href="{% url 'core:materias_inscripcion' %}" class="btn btn-primary mt-2">Inscribirse a materias</a>
+                    {% else %}
+                        <p class="mt-2">Primero debes inscribirte en una carrera.</p>
+                        <a href="{% url 'core:carreras' %}" class="btn btn-primary mt-2">Ver carreras disponibles</a>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>
@@ -107,142 +162,4 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
         </div>
     </div>
 </div>
-
-<!-- Additional Styles -->
-<style>
-.list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.list-item:last-child {
-    border-bottom: none;
-}
-
-.list-item-content h4 {
-    margin: 0 0 0.25rem 0;
-    font-size: 1rem;
-}
-
-.list-item-content p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--text-light);
-}
-
-.badge {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    background-color: #e2e8f0;
-    color: #4a5568;
-}
-
-.event-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.event-item {
-    display: flex;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.event-time {
-    text-align: center;
-    margin-right: 1rem;
-    min-width: 50px;
-}
-
-.event-day {
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 600;
-    line-height: 1;
-    color: var(--primary-color);
-}
-
-.event-month {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: var(--text-light);
-}
-
-.event-details h4 {
-    margin: 0 0 0.25rem 0;
-    font-size: 0.95rem;
-}
-
-.event-details p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--text-light);
-}
-
-.grade-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.grade-item {
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.grade-course {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    margin-bottom: 0.25rem;
-}
-
-.grade-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.grade-title {
-    font-weight: 500;
-}
-
-.grade-value {
-    font-weight: 600;
-    font-size: 1.1rem;
-}
-
-.text-success {
-    color: #38a169;
-}
-
-.text-danger {
-    color: #e53e3e;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 1.5rem 0;
-    color: var(--text-light);
-}
-
-.empty-state i {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-    color: #e2e8f0;
-    display: block;
-}
-</style>
 {% endblock %}
