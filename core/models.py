@@ -197,9 +197,11 @@ class Inscripcion(models.Model):
     
     def save(self, *args, **kwargs):
         """Override save to validate enrollment constraints."""
-        # Check if the student is enrolled in the career
+        # Get the student's career enrollment
         carrera_alumno = self.alumno.carreras_inscripto.first()
-        if not carrera_alumno or carrera_alumno.carrera != self.materia.carrera:
+        
+        # Check if the student is enrolled in any of the careers associated with the subject
+        if not carrera_alumno or not self.materia.carreras.filter(id=carrera_alumno.id).exists():
             raise ValueError("El alumno no está inscripto en la carrera de esta materia")
             
         # Check if there's available space
