@@ -1,0 +1,206 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-user-graduate"></i> Detalle del Alumno</h2>
+        <a href="{% url 'core:preceptor_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Volver
+        </a>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">{{ alumno.get_full_name|default:"Nombre del Alumno" }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Información Personal</h5>
+                    <p><strong>DNI:</strong> {{ alumno.dni|default:"--------" }}</p>
+                    <p><strong>Email:</strong> {{ alumno.email|default:"--------" }}</p>
+                    <p><strong>Teléfono:</strong> {{ alumno.telefono|default:"--------" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>Información Académica</h5>
+                    <p><strong>Carrera:</strong> Carrera del Alumno</p>
+                    <p><strong>Año de Ingreso:</strong> 2023</p>
+                    <p><strong>Estado:</strong> <span class="badge bg-success">Regular</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#inasistencias">Inasistencias</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#notas">Notas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#observaciones">Observaciones</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="inasistencias">
+                    <h5>Registro de Inasistencias</h5>
+                    <p>Aquí se mostrará el historial de inasistencias del alumno.</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        El alumno tiene 3 inasistencias sin justificar.
+                    </div>
+                    <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#justificarModal">
+                        <i class="fas fa-file-signature"></i> Justificar Inasistencias
+                    </button>
+                </div>
+                <div class="tab-pane fade" id="notas">
+                    <h5>Calificaciones</h5>
+                    <p>Aquí se mostrarán las calificaciones del alumno.</p>
+                </div>
+                <div class="tab-pane fade" id="observaciones">
+                    <h5>Observaciones</h5>
+                    <p>Aquí se mostrarán las observaciones sobre el alumno.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#nuevaObservacionModal">
+                        <i class="fas fa-plus"></i> Agregar Observación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'core:notificar_alumno' alumno.id %}" class="btn btn-info">
+            <i class="fas fa-envelope"></i> Enviar Notificación
+        </a>
+        <a href="#" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#contactarApoderadoModal">
+            <i class="fas fa-phone"></i> Contactar Apoderado
+        </a>
+    </div>
+</div>
+
+<!-- Modal Justificar Inasistencia -->
+<div class="modal fade" id="justificarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Justificar Inasistencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Seleccione las inasistencias a justificar:</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="inasistencia1">
+                    <label class="form-check-label" for="inasistencia1">
+                        15/10/2023 - Matemáticas
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="inasistencia2">
+                    <label class="form-check-label" for="inasistencia2">
+                        18/10/2023 - Lengua
+                    </label>
+                </div>
+                <div class="mt-3">
+                    <label for="motivo" class="form-label">Motivo de la justificación:</label>
+                    <select class="form-select" id="motivo">
+                        <option value="">Seleccione un motivo...</option>
+                        <option value="enfermedad">Enfermedad</option>
+                        <option value="familiar">Problemas familiares</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="mt-3">
+                    <label for="comentario" class="form-label">Comentario adicional:</label>
+                    <textarea class="form-control" id="comentario" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Guardar Justificación</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nueva Observación -->
+<div class="modal fade" id="nuevaObservacionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Observación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="tipoObservacion" class="form-label">Tipo de Observación:</label>
+                    <select class="form-select" id="tipoObservacion">
+                        <option value="positiva">Positiva</option>
+                        <option value="negativa">Negativa</option>
+                        <option value="neutra">Neutra</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="observacion" class="form-label">Observación:</label>
+                    <textarea class="form-control" id="observacion" rows="4" required></textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="notificarApoderado">
+                    <label class="form-check-label" for="notificarApoderado">
+                        Notificar al apoderado
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary">Guardar Observación</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Contactar Apoderado -->
+<div class="modal fade" id="contactarApoderadoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Contactar Apoderado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    Datos del apoderado de {{ alumno.get_short_name|default:"el alumno" }}
+                </div>
+                <p><strong>Nombre:</strong> Nombre Apoderado</p>
+                <p><strong>Teléfono:</strong> +54 9 11 1234-5678</p>
+                <p><strong>Email:</strong> apoderado@example.com</p>
+                <hr>
+                <div class="mb-3">
+                    <label for="mensajeApoderado" class="form-label">Mensaje:</label>
+                    <textarea class="form-control" id="mensajeApoderado" rows="4" placeholder="Escriba su mensaje aquí..."></textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="enviarCopia">
+                    <label class="form-check-label" for="enviarCopia">
+                        Enviar copia a mi correo
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Enviar Mensaje
+                </button>
+                <button type="button" class="btn btn-success">
+                    <i class="fas fa-phone"></i> Llamar Ahora
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
