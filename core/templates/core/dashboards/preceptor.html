@@ -11,7 +11,7 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
 {% block dashboard_content %}
 <div class="dashboard-grid">
     <!-- Resumen de Asistencia -->
-    <div class="dashboard-card">
+    <!-- <div class="dashboard-card">
         <div class="card-header">
             <h2><i class="fas fa-clipboard-check"></i> Asistencia del Día</h2>
         </div>
@@ -35,10 +35,11 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
                 </div>
             </div>
             <div class="text-center mt-3">
-                <a href="{% url 'core:tomar_asistencia' %}" class="btn btn-primary btn-sm">Tomar Asistencia</a>
+                <a href="#" class="btn btn-primary btn-sm">Tomar Asistencia</a>
             </div>
         </div>
-    </div>
+    </div> -->
+    <!-- Why does the Preceptor takes attendance and not the Docente? -->
 
     <!-- Últimas Novedades -->
     <div class="dashboard-card">
