@@ -7,7 +7,7 @@ from django.db.models import Count, Q
 from django.utils import timezone
 from .decorators import admin_required, docente_required, alumno_required, preceptor_required
 from .forms import ProfileEditForm
-from .models import Materia, Usuario
+from .models import Materia, Usuario, Carrera, InscripcionCarrera, Inscripcion
 
 
 def home(request):
@@ -150,7 +150,43 @@ def docente_dashboard(request):
 @alumno_required
 def alumno_dashboard(request):
     """Alumno dashboard view."""
-    return render(request, 'core/dashboards/alumno.html')
+    # Get the student's active career enrollments with additional data
+    carreras_inscripto = request.user.carreras_inscripto.filter(
+        is_active=True
+    ).annotate(
+        materias_inscriptas_count=Count(
+            'materias',
+            filter=Q(
+                materias__inscripciones__alumno=request.user,
+                materias__inscripciones__is_active=True,
+                materias__is_active=True
+            ),
+            distinct=True
+        ),
+        materias_totales_count=Count(
+            'materias',
+            filter=Q(materias__is_active=True),
+            distinct=True
+        )
+    )
+    
+    # Get the student's active career enrollments
+    carreras_inscritas = request.user.carreras_inscripto.filter(
+        inscripciones_carrera__is_active=True
+    )
+    
+    materias_inscriptas = Materia.objects.filter(
+        inscripciones__alumno=request.user,
+        inscripciones__is_active=True,
+        is_active=True,
+        carreras__in=carreras_inscritas
+    ).prefetch_related('carreras').distinct()
+    
+    context = {
+        'carreras_inscripto': carreras_inscripto,
+        'materias_inscriptas': materias_inscriptas,
+    }
+    return render(request, 'core/dashboards/alumno.html', context)
 
 
 @login_required
@@ -243,18 +279,20 @@ def tomar_asistencia(request, materia_id):
     )
     
     # Get active enrollments with student info
-    inscripciones = materia.inscripciones.filter(is_active=True).select_related('alumno')
+    # inscripciones = materia.inscripciones.filter(is_active=True).select_related('alumno')
+    # Currently not ever used. Don't delete, we might use later.
     
     if request.method == 'POST':
         # Placeholder for actual attendance logic
         messages.success(request, 'Asistencia registrada correctamente')
         return redirect('core:detalle_materia', materia_id=materia.id)
     
-    context = {
+    """ context = {
         'materia': materia,
         'inscripciones': inscripciones,
         'hoy': timezone.now().date()
-    }
+    } """
+    # Currently not ever used. Don't delete, we might use later.
     
     # For now, redirect to detail page with a message
     messages.info(request, 'La funcionalidad de toma de asistencia estará disponible próximamente')
@@ -265,21 +303,28 @@ def tomar_asistencia(request, materia_id):
 @alumno_required
 def mis_materias(request):
     """
-    Muestra las materias en las que el alumno está inscripto.
+    Muestra las materias en las que el alumno está inscrito.
     """
     try:
-        # Obtener las materias activas del alumno actual con sus carreras
-        materias = Materia.objects.filter(
-            inscripciones__alumno=request.user,
-            inscripciones__is_active=True,
-            is_active=True
-        ).prefetch_related('carreras').distinct()
+        # Obtener las carreras activas del alumno
+        carreras_inscrito = request.user.carreras_inscripto.filter(
+            inscripciones_carrera__is_active=True
+        )
         
-        # Ordenar por nombre de materia
-        materias = materias.order_by('nombre')
+        # Obtener las inscripciones activas del alumno a materias
+        inscripciones = Inscripcion.objects.filter(
+            alumno=request.user,
+            is_active=True,
+            materia__is_active=True
+        ).select_related('materia', 'materia__docente').prefetch_related('materia__carreras')
+        
+        # Agregar un contador de inscriptos a cada materia
+        for inscripcion in inscripciones:
+            inscripcion.materia.inscriptos_count = inscripcion.materia.inscripciones.activas().count()
         
         context = {
-            'materias': materias,
+            'carreras_inscrito': carreras_inscrito,
+            'inscripciones': inscripciones,
             'title': 'Mis Materias',
         }
         
@@ -341,9 +386,82 @@ def materias_inscripcion(request):
     """
     Permite al alumno ver e inscribirse a materias disponibles.
     """
-    # Placeholder para la implementación futura
-    messages.info(request, 'Próximamente: Gestión de inscripción a materias')
-    return render(request, 'core/alumno/materias_inscripcion.html')
+    # Obtener las carreras en las que el alumno está inscripto
+    carreras_inscritas = request.user.carreras_inscripto.filter(
+        inscripciones_carrera__is_active=True
+    )
+    
+    # Si no está inscripto en ninguna carrera, redirigir con mensaje
+    if not carreras_inscritas.exists():
+        messages.warning(
+            request,
+            'Debes estar inscripto en al menos una carrera para poder inscribirte a materias.'
+        )
+        return redirect('core:carreras')
+    
+    # Obtener las materias en las que ya está inscripto el alumno
+    materias_inscriptas = Materia.objects.filter(
+        inscripciones__alumno=request.user,
+        inscripciones__is_active=True
+    )
+    
+    # Obtener materias disponibles para inscribirse
+    # Son las materias de las carreras en las que está inscripto,
+    # que no esté ya inscripto, y que estén activas
+    materias_disponibles = Materia.objects.filter(
+        carreras__in=carreras_inscritas,
+        is_active=True
+    ).exclude(
+        id__in=materias_inscriptas.values_list('id', flat=True)
+    ).distinct()
+    
+    # Manejar la inscripción a una materia
+    if request.method == 'POST' and 'materia_id' in request.POST:
+        try:
+            materia_id = request.POST.get('materia_id')
+            materia = Materia.objects.get(
+                id=materia_id,
+                carreras__in=carreras_inscritas,
+                is_active=True
+            )
+            
+            # Verificar si ya existe una inscripción inactiva
+            inscripcion_existente = Inscripcion.objects.filter(
+                alumno=request.user,
+                materia=materia
+            ).first()
+            
+            if inscripcion_existente:
+                # Si existe una inscripción inactiva, reactivarla
+                if not inscripcion_existente.is_active:
+                    inscripcion_existente.is_active = True
+                    inscripcion_existente.save()
+                    messages.success(request, f'Te has inscripto a {materia.nombre} correctamente.')
+                else:
+                    messages.info(request, f'Ya estás inscripto en {materia.nombre}.')
+            else:
+                # Crear nueva inscripción
+                Inscripcion.objects.create(
+                    alumno=request.user,
+                    materia=materia,
+                    is_active=True
+                )
+                messages.success(request, f'Te has inscripto a {materia.nombre} correctamente.')
+            
+            return redirect('core:materias_inscripcion')
+            
+        except Materia.DoesNotExist:
+            messages.error(request, 'La materia seleccionada no es válida o no está disponible.')
+        except Exception as e:
+            messages.error(request, f'Error al inscribirse a la materia: {str(e)}')
+    
+    context = {
+        'materias_inscriptas': materias_inscriptas,
+        'materias_disponibles': materias_disponibles,
+        'carreras_inscritas': carreras_inscritas
+    }
+    
+    return render(request, 'core/alumno/materias_inscripcion.html', context)
 
 
 def novedades(request):
@@ -395,6 +513,98 @@ def notificar_alumno(request, alumno_id):
         return redirect('core:home')
     
     # Placeholder implementation
-    alumno = get_object_or_404(Usuario, id=alumno_id)
-    messages.info(request, f'Vista de notificación al alumno {alumno.get_full_name()} (placeholder)')
-    return render(request, 'core/preceptor/notificar_alumno.html', {'alumno': alumno})
+    messages.info(request, 'Próximamente: Notificación a alumno')
+    return render(request, 'core/preceptor/notificar_alumno.html')
+
+
+def carreras(request):
+    """
+    Muestra el listado de todas las carreras disponibles.
+    Los usuarios pueden ver las carreras, y los alumnos pueden inscribirse.
+    """
+    carreras = Carrera.objects.filter(is_active=True).order_by('nombre')
+    
+    # Check if user is authenticated and is an alumno
+    user_subscriptions = set()
+    if request.user.is_authenticated and hasattr(request.user, 'rol') and request.user.rol == Usuario.Rol.ALUMNO:
+        user_subscriptions = set(
+            InscripcionCarrera.objects.filter(
+                alumno=request.user,
+                is_active=True
+            ).values_list('carrera_id', flat=True)
+        )
+    
+    context = {
+        'carreras': carreras,
+        'user_subscriptions': user_subscriptions,
+        'is_alumno': request.user.is_authenticated and hasattr(request.user, 'rol') and request.user.rol == Usuario.Rol.ALUMNO,
+        'title': 'Carreras Disponibles'
+    }
+    return render(request, 'core/carreras/lista.html', context)
+
+
+@login_required
+def inscribir_carrera(request, carrera_id):
+    """
+    Maneja la inscripción de un alumno a una carrera.
+    Si ya existe una inscripción inactiva, la reactiva.
+    Si ya está activa, redirige al dashboard.
+    Si no existe, crea una nueva.
+    """
+    if request.user.rol != Usuario.Rol.ALUMNO:
+        messages.error(request, 'Solo los alumnos pueden inscribirse a carreras.')
+        return redirect('core:carreras')
+    
+    carrera = get_object_or_404(Carrera, id=carrera_id, is_active=True)
+    
+    # Check for existing subscription (active or inactive)
+    try:
+        inscripcion = InscripcionCarrera.objects.get(
+            alumno=request.user,
+            carrera=carrera
+        )
+        
+        if inscripcion.is_active:
+            messages.info(request, f'Ya estás inscripto en la carrera {carrera.nombre}.')
+            return redirect('core:mis_materias')
+        else:
+            # Reactivar la inscripción existente
+            inscripcion.is_active = True
+            inscripcion.fecha_inscripcion = timezone.now()  # Actualizar la fecha
+            inscripcion.save()
+            message = f'¡Has reactivado tu inscripción a {carrera.nombre}!'
+            
+    except InscripcionCarrera.DoesNotExist:
+        # Crear nueva inscripción
+        try:
+            InscripcionCarrera.objects.create(
+                alumno=request.user,
+                carrera=carrera
+            )
+            message = f'¡Te has inscripto exitosamente a {carrera.nombre!r}!' 
+        except Exception as e:
+            messages.error(request, f'Error al inscribirse a la carrera: {str(e)}')
+            return redirect('core:carreras')
+    
+    # Auto-subscribe to available subjects
+    from .utils import auto_subscribe_to_available_subjects
+    success_count, skipped_count, errors = auto_subscribe_to_available_subjects(
+        request.user, carrera_id
+    )
+    
+    # Add success message with subscription details
+    messages.success(request, message)
+    if success_count > 0:
+        messages.success(
+            request,
+            f'Te hemos inscripto automáticamente en {success_count} materia(s) disponible(s).'
+        )
+    if skipped_count > 0:
+        messages.info(
+            request,
+            f'{skipped_count} materia(s) no tienen cupo disponible actualmente.'
+        )
+    for error in errors:
+        messages.warning(request, error)
+    
+    return redirect('core:materias_inscripcion')
