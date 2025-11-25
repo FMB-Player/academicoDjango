@@ -113,13 +113,13 @@ def handler500(request, template_name='core/errors/500.html'):
 def dashboard(request):
     """Main dashboard view that redirects to role-specific dashboards."""
     if request.user.rol == 'ADMIN':
-        return redirect('admin_dashboard')
+        return redirect('core:admin_dashboard')
     elif request.user.rol == 'DOCENTE':
-        return redirect('docente_dashboard')
+        return redirect('core:docente_dashboard')
     elif request.user.rol == 'ALUMNO':
-        return redirect('alumno_dashboard')
+        return redirect('core:alumno_dashboard')
     elif request.user.rol == 'PRECEPTOR':
-        return redirect('preceptor_dashboard')
+        return redirect('core:preceptor_dashboard')
     return redirect('core:home')
 
 
