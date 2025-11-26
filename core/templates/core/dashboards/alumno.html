@@ -17,32 +17,99 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
             <h2><i class="fas fa-graduation-cap"></i> Mis Carreras</h2>
         </div>
         <div class="card-content">
-            <ul class="list">
-                {% for carrera in carreras_inscripto %}
-                <li class="list-item">
-                    <div class="list-item-content">
-                        <h4>
-                            <a href="{% url 'core:alumno_mis_materias' %}?carrera={{ carrera.id }}" class="text-dark">
-                                {{ carrera.nombre }}
-                            </a>
-                        </h4>
-                        <p class="text-muted mb-0">
-                            {% if carrera.materias_inscriptas_count > 0 %}
-                                Inscripto en {{ carrera.materias_inscriptas_count }} materia{{ carrera.materias_inscriptas_count|pluralize }}
+            {% for inscripcion in carreras_inscripto %}
+            <div class="career-section mb-4">
+                <div class="career-header">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h4>
+                                <a href="{% url 'core:alumno_mis_materias' %}?carrera={{ inscripcion.carrera.id }}" class="text-dark">
+                                    {{ inscripcion.carrera.nombre }}
+                                </a>
+                            </h4>
+                            <p class="text-muted mb-0">
+                                {% if inscripcion.materias_inscriptas_count > 0 %}
+                                    Inscripto en {{ inscripcion.materias_inscriptas_count }} de {{ inscripcion.materias_totales_count }} materia{{ inscripcion.materias_totales_count|pluralize }}
+                                {% else %}
+                                    Sin materias inscriptas
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="career-actions">
+                            {% if inscripcion.puede_desinscribirse %}
+                                <a href="{% url 'core:desinscribir_carrera' inscripcion.carrera.id %}" 
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="return confirm('¿Estás seguro que quieres desinscribirte de {{ inscripcion.carrera.nombre }}?')">
+                                    <i class="fas fa-times"></i> Desinscribirse
+                                </a>
                             {% else %}
-                                Sin materias inscriptas
+                                <button class="btn btn-sm btn-outline-secondary" disabled 
+                                        title="Debes desinscribirte de todas las materias primero">
+                                    <i class="fas fa-times"></i> No se puede desinscribir
+                                </button>
                             {% endif %}
-                        </p>
+                        </div>
                     </div>
-                    <div class="list-item-actions">
-                        <a href="{% url 'core:alumno_mis_materias' %}?carrera={{ carrera.id }}" 
-                           class="btn btn-sm">
-                            Ver materias <i class="fas fa-chevron-right ml-1"></i>
-                        </a>
+                </div>
+                
+                <!-- Materias de esta carrera -->
+                <div class="career-materias mt-3">
+                    <!-- Materias inscriptas -->
+                    {% if inscripcion.materias_inscriptas_count > 0 %}
+                    <div class="materias-section">
+                        <h6 class="text-success">Materias inscriptas:</h6>
+                        <div class="row">
+                            {% for materia in inscripcion.carrera.materias.all %}
+                                {% if materia in materias_inscriptas %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                        <span>{{ materia.nombre }}</span>
+                                        <a href="{% url 'core:desinscribir_materia' materia.id %}" 
+                                           class="btn btn-xs btn-outline-danger"
+                                           onclick="return confirm('¿Estás seguro que quieres desinscribirte de {{ materia.nombre }}?')">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                     </div>
-                </li>
-                {% endfor %}
-            </ul>
+                    {% endif %}
+                    
+                    <!-- Materias no inscriptas -->
+                    {% if inscripcion.materias_no_inscriptas %}
+                    <div class="materias-section mt-3">
+                        <h6 class="text-info">Materias disponibles para inscribirse:</h6>
+                        <div class="row">
+                            {% for materia in inscripcion.materias_no_inscriptas %}
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                    <div>
+                                        <span>{{ materia.nombre }}</span>
+                                        <small class="text-muted d-block">
+                                            Cupo: {{ materia.cupo_actual }}/{{ materia.cupo_maximo }}
+                                        </small>
+                                    </div>
+                                    {% if materia.cupo_actual < materia.cupo_maximo %}
+                                        <a href="{% url 'core:inscribir_materia' materia.id %}" 
+                                           class="btn btn-xs btn-outline-success">
+                                            <i class="fas fa-plus"></i>
+                                        </a>
+                                    {% else %}
+                                        <button class="btn btn-xs btn-outline-secondary" disabled>
+                                            Sin cupo
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}
