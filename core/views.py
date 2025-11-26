@@ -271,8 +271,8 @@ def inscribir_materia(request, materia_id):
 @login_required
 @alumno_required
 def alumno_dashboard(request):
-    """Alumno dashboard view."""
-    # Get the student's active career enrollments only (not all available careers)
+    """Alumno dashboard view - simplified version."""
+    # Get the student's active career enrollments only
     carreras_inscripto = request.user.carreras_inscripciones.filter(
         is_active=True
     ).annotate(
@@ -289,45 +289,8 @@ def alumno_dashboard(request):
             'carrera__materias',
             filter=Q(carrera__materias__is_active=True),
             distinct=True
-        ),
-        puede_desinscribirse=Count(
-            'carrera__materias',
-            filter=Q(
-                carrera__materias__inscripciones__alumno=request.user,
-                carrera__materias__inscripciones__is_active=True,
-                carrera__materias__is_active=True
-            ),
-            distinct=True
         )
     )
-    
-    # For each career, check if student can unsubscribe and get unsubscribed materias
-    for carrera_insc in carreras_inscripto:
-        # Check if can unsubscribe (no active materia subscriptions)
-        inscripciones_activas = Inscripcion.objects.filter(
-            alumno=request.user,
-            materia__carreras=carrera_insc.carrera,
-            is_active=True,
-            materia__is_active=True
-        ).exists()
-        carrera_insc.puede_desinscribirse = not inscripciones_activas
-        
-        # Get unsubscribed materias for this career
-        materias_inscriptas_ids = Materia.objects.filter(
-            inscripciones__alumno=request.user,
-            inscripciones__is_active=True,
-            is_active=True,
-            carreras=carrera_insc.carrera
-        ).values_list('id', flat=True)
-        
-        carrera_insc.materias_no_inscriptas = Materia.objects.filter(
-            carreras=carrera_insc.carrera,
-            is_active=True
-        ).exclude(
-            id__in=materias_inscriptas_ids
-        ).annotate(
-            cupo_actual=Count('inscripciones', filter=Q(inscripciones__is_active=True))
-        )
     
     # Get the student's active subject enrollments
     materias_inscriptas = Materia.objects.filter(
@@ -457,13 +420,56 @@ def tomar_asistencia(request, materia_id):
 @alumno_required
 def mis_materias(request):
     """
-    Muestra las materias en las que el alumno está inscrito.
+    Muestra las materias en las que el alumno está inscrito con opciones de gestión.
     """
     try:
-        # Obtener las carreras activas del alumno
-        carreras_inscrito = request.user.carreras_inscripto.filter(
-            inscripciones_carrera__is_active=True
+        # Obtener las carreras activas del alumno con información de desinscripción
+        carreras_inscrito = request.user.carreras_inscripciones.filter(
+            is_active=True
+        ).annotate(
+            materias_inscriptas_count=Count(
+                'carrera__materias',
+                filter=Q(
+                    carrera__materias__inscripciones__alumno=request.user,
+                    carrera__materias__inscripciones__is_active=True,
+                    carrera__materias__is_active=True
+                ),
+                distinct=True
+            ),
+            materias_totales_count=Count(
+                'carrera__materias',
+                filter=Q(carrera__materias__is_active=True),
+                distinct=True
+            )
         )
+        
+        # Para cada carrera, verificar si puede desinscribirse y obtener materias no inscriptas
+        for carrera_insc in carreras_inscrito:
+            # Verificar si puede desinscribirse (no tiene materias activas)
+            inscripciones_activas = Inscripcion.objects.filter(
+                alumno=request.user,
+                materia__carreras=carrera_insc.carrera,
+                is_active=True,
+                materia__is_active=True
+            ).exists()
+            carrera_insc.puede_desinscribirse = not inscripciones_activas
+            
+            # Obtener materias no inscriptas de esta carrera
+            materias_inscriptas_ids = Inscripcion.objects.filter(
+                alumno=request.user,
+                is_active=True,
+                materia__is_active=True,
+                materia__carreras=carrera_insc.carrera
+            ).values_list('materia_id', flat=True)
+            
+            carrera_insc.materias_no_inscriptas = Materia.objects.filter(
+                carreras=carrera_insc.carrera,
+                is_active=True
+            ).exclude(
+                id__in=materias_inscriptas_ids
+            ).annotate(
+                cupo_actual=Count('inscripciones', filter=Q(inscripciones__is_active=True))
+            )
         
         # Obtener las inscripciones activas del alumno a materias
         inscripciones = Inscripcion.objects.filter(
@@ -472,9 +478,14 @@ def mis_materias(request):
             materia__is_active=True
         ).select_related('materia', 'materia__docente').prefetch_related('materia__carreras')
         
-        # Agregar un contador de inscriptos a cada materia
+        # Agregar información adicional a cada materia
         for inscripcion in inscripciones:
             inscripcion.materia.inscriptos_count = inscripcion.materia.inscripciones.activas().count()
+            inscripcion.materia.carreras_comunes = inscripcion.materia.carreras.filter(
+                inscripciones_carrera__alumno=request.user,
+                inscripciones_carrera__is_active=True,
+                is_active=True
+            )
         
         context = {
             'carreras_inscrito': carreras_inscrito,
