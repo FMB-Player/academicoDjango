@@ -11,7 +11,7 @@
     
     <div class="card mb-4">
         <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">{{ alumno.get_full_name|default:"Nombre del Alumno" }}</h4>
+            <h4 class="mb-0">{% if alumno.nombre and alumno.apellido %}{{ alumno.nombre }} {{ alumno.apellido }}{% else %}Nombre del Alumno{% endif %}</h4>
         </div>
         <div class="card-body">
             <div class="row">
