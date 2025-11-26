@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Count, Q
 from django.utils import timezone
 from .decorators import admin_required, docente_required, alumno_required, preceptor_required
-from .forms import ProfileEditForm
+from .forms import ProfileEditForm, CustomPasswordChangeForm
 from .models import Materia, Usuario, Carrera, InscripcionCarrera, Inscripcion
 
 
@@ -74,6 +75,27 @@ def edit_profile(request):
         form = ProfileEditForm(instance=request.user)
     
     return render(request, 'core/edit_profile.html', {'form': form})
+
+
+@login_required
+def change_password(request):
+    """
+    Change user password.
+    """
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Update session to prevent user from being logged out
+            update_session_auth_hash(request, user)
+            # Update the flag
+            user.debe_cambiar_password = False
+            user.save()
+            messages.success(request, 'Tu contraseña ha sido actualizada exitosamente.')
+            return redirect('core:perfil')
+    else:
+        form = CustomPasswordChangeForm(request.user)
+    return render(request, 'core/auth/change_password.html', {'form': form})
 
 
 def handler404(request, exception=None, template_name='core/errors/404.html'):
