@@ -170,38 +170,170 @@ def docente_dashboard(request):
 
 @login_required
 @alumno_required
+def desinscribir_materia(request, materia_id):
+    """Desinscribir a un alumno de una materia específica."""
+    materia = get_object_or_404(Materia, id=materia_id, is_active=True)
+    
+    # Buscar la inscripción activa del alumno
+    try:
+        inscripcion = Inscripcion.objects.get(
+            alumno=request.user,
+            materia=materia,
+            is_active=True
+        )
+        # Desactivar la inscripción (baja lógica)
+        inscripcion.is_active = False
+        inscripcion.save()
+        messages.success(request, f'Te has desinscripto de {materia.nombre}')
+    except Inscripcion.DoesNotExist:
+        messages.error(request, 'No estás inscripto en esta materia')
+    
+    return redirect('core:alumno_dashboard')
+
+
+@login_required
+@alumno_required
+def desinscribir_carrera(request, carrera_id):
+    """Desinscribir a un alumno de una carrera específica."""
+    carrera = get_object_or_404(Carrera, id=carrera_id, is_active=True)
+    
+    # Verificar que no tenga inscripciones activas a materias de esta carrera
+    inscripciones_activas = Inscripcion.objects.filter(
+        alumno=request.user,
+        materia__carreras=carrera,
+        is_active=True,
+        materia__is_active=True
+    ).exists()
+    
+    if inscripciones_activas:
+        messages.error(request, 
+            f'No puedes desinscribirte de {carrera.nombre} porque todavía tienes materias activas. '
+            f'Desinscríbete primero de todas las materias de esta carrera.'
+        )
+    else:
+        try:
+            inscripcion_carrera = InscripcionCarrera.objects.get(
+                alumno=request.user,
+                carrera=carrera,
+                is_active=True
+            )
+            # Desactivar la inscripción a la carrera (baja lógica)
+            inscripcion_carrera.is_active = False
+            inscripcion_carrera.save()
+            messages.success(request, f'Te has desinscripto de {carrera.nombre}')
+        except InscripcionCarrera.DoesNotExist:
+            messages.error(request, 'No estás inscripto en esta carrera')
+    
+    return redirect('core:alumno_dashboard')
+
+
+@login_required
+@alumno_required
+def inscribir_materia(request, materia_id):
+    """Inscribir a un alumno en una materia específica."""
+    materia = get_object_or_404(Materia, id=materia_id, is_active=True)
+    
+    # Verificar que el alumno esté inscripto en alguna carrera de esta materia
+    carreras_comunes = materia.carreras.filter(
+        inscripciones_carrera__alumno=request.user,
+        inscripciones_carrera__is_active=True,
+        is_active=True
+    )
+    
+    if not carreras_comunes.exists():
+        messages.error(request, 
+            f'No puedes inscribirte en {materia.nombre} porque no estás inscripto en ninguna carrera que contenga esta materia'
+        )
+        return redirect('core:alumno_dashboard')
+    
+    # Verificar que ya no esté inscripto
+    if Inscripcion.objects.filter(alumno=request.user, materia=materia, is_active=True).exists():
+        messages.warning(request, f'Ya estás inscripto en {materia.nombre}')
+        return redirect('core:alumno_dashboard')
+    
+    # Verificar cupo
+    inscripciones_activas = materia.inscripciones.filter(is_active=True).count()
+    if inscripciones_activas >= materia.cupo_maximo:
+        messages.error(request, f'No hay cupo disponible en {materia.nombre}')
+        return redirect('core:alumno_dashboard')
+    
+    # Crear la inscripción
+    Inscripcion.objects.create(
+        alumno=request.user,
+        materia=materia,
+        fecha_inscripcion=timezone.now()
+    )
+    
+    messages.success(request, f'Te has inscripto exitosamente en {materia.nombre}')
+    return redirect('core:alumno_dashboard')
+
+
+@login_required
+@alumno_required
 def alumno_dashboard(request):
     """Alumno dashboard view."""
-    # Get the student's active career enrollments with additional data
-    carreras_inscripto = request.user.carreras_inscripto.filter(
+    # Get the student's active career enrollments only (not all available careers)
+    carreras_inscripto = request.user.carreras_inscripciones.filter(
         is_active=True
     ).annotate(
         materias_inscriptas_count=Count(
-            'materias',
+            'carrera__materias',
             filter=Q(
-                materias__inscripciones__alumno=request.user,
-                materias__inscripciones__is_active=True,
-                materias__is_active=True
+                carrera__materias__inscripciones__alumno=request.user,
+                carrera__materias__inscripciones__is_active=True,
+                carrera__materias__is_active=True
             ),
             distinct=True
         ),
         materias_totales_count=Count(
-            'materias',
-            filter=Q(materias__is_active=True),
+            'carrera__materias',
+            filter=Q(carrera__materias__is_active=True),
+            distinct=True
+        ),
+        puede_desinscribirse=Count(
+            'carrera__materias',
+            filter=Q(
+                carrera__materias__inscripciones__alumno=request.user,
+                carrera__materias__inscripciones__is_active=True,
+                carrera__materias__is_active=True
+            ),
             distinct=True
         )
     )
     
-    # Get the student's active career enrollments
-    carreras_inscritas = request.user.carreras_inscripto.filter(
-        inscripciones_carrera__is_active=True
-    )
+    # For each career, check if student can unsubscribe and get unsubscribed materias
+    for carrera_insc in carreras_inscripto:
+        # Check if can unsubscribe (no active materia subscriptions)
+        inscripciones_activas = Inscripcion.objects.filter(
+            alumno=request.user,
+            materia__carreras=carrera_insc.carrera,
+            is_active=True,
+            materia__is_active=True
+        ).exists()
+        carrera_insc.puede_desinscribirse = not inscripciones_activas
+        
+        # Get unsubscribed materias for this career
+        materias_inscriptas_ids = Materia.objects.filter(
+            inscripciones__alumno=request.user,
+            inscripciones__is_active=True,
+            is_active=True,
+            carreras=carrera_insc.carrera
+        ).values_list('id', flat=True)
+        
+        carrera_insc.materias_no_inscriptas = Materia.objects.filter(
+            carreras=carrera_insc.carrera,
+            is_active=True
+        ).exclude(
+            id__in=materias_inscriptas_ids
+        ).annotate(
+            cupo_actual=Count('inscripciones', filter=Q(inscripciones__is_active=True))
+        )
     
+    # Get the student's active subject enrollments
     materias_inscriptas = Materia.objects.filter(
         inscripciones__alumno=request.user,
         inscripciones__is_active=True,
-        is_active=True,
-        carreras__in=carreras_inscritas
+        is_active=True
     ).prefetch_related('carreras').distinct()
     
     context = {
