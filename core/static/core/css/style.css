@@ -35,6 +35,20 @@ a:hover {
     text-decoration: underline;
 }
 
+.primary-color {
+    color: var(--primary-color);
+}
+
+.primary-color-alt {
+    color: var(--primary-hover);
+}
+
+.alert-on-hover:hover {
+    .alert-on-hover-target {
+        color: var(--warning);
+    };
+}
+
 /* Layout */
 .main-header {
     background-color: var(--fake-white);
@@ -289,7 +303,7 @@ main {
 }
 
 /* All disabled elements */
-:disabled, [disabled], .disabled, [aria-disabled="true"] {
+:disabled, [disabled], .disabled, [aria-disabled="true"], [href="#"] {
     cursor: default !important;
     filter: grayscale(90%);
     opacity: 0.6;
