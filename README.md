@@ -28,8 +28,8 @@ Sistema de gestión académica desarrollado con Django.
 
 1. Clonar el repositorio:
    ```bash
-   git clone [https://github.com/FMB-Player/academicoDjango.git]
-   cd [academicoDjango]
+   git clone https://github.com/FMB-Player/academicoDjango.git
+   cd academicoDjango
    ```
 
 2. Crear un entorno virtual:
