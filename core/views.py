@@ -522,7 +522,7 @@ def detalle_alumno(request, alumno_id):
     
     # Placeholder implementation
     alumno = get_object_or_404(Usuario, id=alumno_id)
-    messages.info(request, f'Vista de detalle del alumno {alumno.get_full_name()} (placeholder)')
+    messages.info(request, f'Vista de detalle del alumno {alumno.nombre} {alumno.apellido} (placeholder)')
     return render(request, 'core/preceptor/detalle_alumno.html', {'alumno': alumno})
 
 
