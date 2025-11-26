@@ -61,6 +61,9 @@ urlpatterns = [
     path('dashboard/alumno/mis-materias/', views.mis_materias, name='alumno_mis_materias'),
     path('dashboard/alumno/materia/<int:materia_id>/', views.detalle_materia, name='alumno_detalle_materia'),
     path('dashboard/alumno/inscripciones/', views.materias_inscripcion, name='materias_inscripcion'),
+    path('dashboard/alumno/desinscribir-materia/<int:materia_id>/', views.desinscribir_materia, name='desinscribir_materia'),
+    path('dashboard/alumno/desinscribir-carrera/<int:carrera_id>/', views.desinscribir_carrera, name='desinscribir_carrera'),
+    path('dashboard/alumno/inscribir-materia/<int:materia_id>/', views.inscribir_materia, name='inscribir_materia'),
     
     # Preceptor URLs
     path('dashboard/preceptor/', views.preceptor_dashboard, name='preceptor_dashboard'),
