@@ -19,6 +19,7 @@ urlpatterns = [
     # User
     path('perfil/', views.profile, name='perfil'),
     path('perfil/editar/', views.edit_profile, name='editar_perfil'),
+    path('cambiar-contrasena/', views.change_password, name='change_password'),
     
     # Password Reset (using Django's built-in views)
     path('password_reset/', 
