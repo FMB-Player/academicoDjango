@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ValidationError
 
 
 class Persona(models.Model):
@@ -34,8 +35,12 @@ class UsuarioManager(BaseUserManager):
         if not email:
             raise ValueError(_('El email es obligatorio'))
         email = self.normalize_email(email)
+        dni = extra_fields.get('dni', '')
         user = self.model(email=email, **extra_fields)
-        user.set_password(password or str(extra_fields.get('dni', '')))
+        # Set password to DNI if not provided
+        user.set_password(password or str(dni))
+        # Ensure new users must change their password
+        user.debe_cambiar_password = True
         user.save(using=self._db)
         return user
 
@@ -109,8 +114,26 @@ class Carrera(models.Model):
     
     def puede_eliminarse(self):
         """Check if the career can be deleted."""
-        # Usa el related_name real 'inscripciones_carrera'
-        return not (self.materias.exists() or self.inscripciones_carrera.exists())
+        # Can't delete if has active subjects or active enrollments
+        return not (self.materias.filter(is_active=True).exists() or 
+                   self.inscripciones_carrera.activas().exists())
+    
+    def clean(self):
+        """Validate before saving."""
+        super().clean()
+        # Prevent deactivation if has active enrollments
+        if not self.is_active and self.inscripciones_carrera.activas().exists():
+            raise ValidationError(
+                'No se puede desactivar una carrera que tiene inscripciones activas.'
+            )
+    
+    def delete(self, using=None, keep_parents=False):
+        """Override delete to check constraints."""
+        if not self.puede_eliminarse():
+            raise ValidationError(
+                'No se puede eliminar una carrera que tiene materias activas o inscripciones activas.'
+            )
+        super().delete(using=using, keep_parents=keep_parents)
 
 
 class Materia(models.Model):
@@ -155,7 +178,25 @@ class Materia(models.Model):
     
     def puede_eliminarse(self):
         """Check if the subject can be deleted."""
-        return not self.inscripciones.exists()
+        # Can't delete if has active enrollments
+        return not self.inscripciones.activas().exists()
+    
+    def clean(self):
+        """Validate before saving."""
+        super().clean()
+        # Prevent deactivation if has active enrollments
+        if not self.is_active and self.inscripciones.activas().exists():
+            raise ValidationError(
+                'No se puede desactivar una materia que tiene inscripciones activas.'
+            )
+    
+    def delete(self, using=None, keep_parents=False):
+        """Override delete to check constraints."""
+        if not self.puede_eliminarse():
+            raise ValidationError(
+                'No se puede eliminar una materia que tiene inscripciones activas.'
+            )
+        super().delete(using=using, keep_parents=keep_parents)
 
 
 class InscripcionQuerySet(models.QuerySet):
@@ -197,9 +238,11 @@ class Inscripcion(models.Model):
     
     def save(self, *args, **kwargs):
         """Override save to validate enrollment constraints."""
-        # Check if the student is enrolled in the career
+        # Get the student's career enrollment
         carrera_alumno = self.alumno.carreras_inscripto.first()
-        if not carrera_alumno or carrera_alumno.carrera != self.materia.carrera:
+        
+        # Check if the student is enrolled in any of the careers associated with the subject
+        if not carrera_alumno or not self.materia.carreras.filter(id=carrera_alumno.id).exists():
             raise ValueError("El alumno no está inscripto en la carrera de esta materia")
             
         # Check if there's available space

@@ -25,10 +25,13 @@
                 <i class="fas fa-bars"></i>
             </button>
             <div class="nav-links">
+                <a href="{% url 'core:home' %}" class="nav-link">
+                    <i class="fas fa-home"></i> Inicio
+                </a>
+                <a href="{% url 'core:carreras' %}" class="nav-link">
+                    <i class="fas fa-graduation-cap"></i> Carreras
+                </a>
                 {% if user.is_authenticated %}
-                    <a href="{% url 'core:home' %}" class="nav-link">
-                        <i class="fas fa-home"></i> Inicio
-                    </a>
                     {% if user.rol == 'ADMIN' %}
                         <a href="{% url 'core:admin_dashboard' %}" class="nav-link">
                             <i class="fas fa-tachometer-alt"></i> Panel Admin
@@ -46,8 +49,11 @@
                             <i class="fas fa-clipboard-check"></i> Panel Preceptor
                         </a>
                     {% endif %}
-                    <a href="{% url 'core:perfil' %}" class="nav-link">
+                    <a href="{% url 'core:perfil' %}" class="nav-link alert-on-hover">
                         <i class="fas fa-user"></i> Mi Perfil
+                        {% if user.is_authenticated and user.debe_cambiar_password %}
+                            <i class="fas fa-exclamation-triangle text-warning ms-1 primary-color alert-on-hover-target" title="Debes cambiar tu contraseña"></i>
+                        {% endif %}
                     </a>
                     <a href="{% url 'core:logout' %}" class="nav-link btn-logout">
                         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión

@@ -1,5 +1,8 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import PasswordChangeForm as BasePasswordChangeForm
+from django.contrib.auth import password_validation
+from django.utils.translation import gettext_lazy as _
 
 User = get_user_model()
 
@@ -32,3 +35,21 @@ class ProfileEditForm(forms.ModelForm):
         # Add Bootstrap classes to form fields
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+
+class CustomPasswordChangeForm(BasePasswordChangeForm):
+    new_password1 = forms.CharField(
+        label=_("New password"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        strip=False,
+        help_text=password_validation.password_validators_help_text_html(),
+    )
+    new_password2 = forms.CharField(
+        label=_("New password confirmation"),
+        strip=False,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['old_password'].widget.attrs.update({'class': 'form-control'})

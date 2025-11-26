@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+// Add confirmation dialogs to admin actions
+document.addEventListener('DOMContentLoaded', function() {
+    const actionForm = document.querySelector('#changelist-form');
+    if (actionForm) {
+        actionForm.addEventListener('submit', function(e) {
+            const select = document.querySelector('#changelist-form select[name="action"]');
+            const submitButton = e.submitter;
+            
+            if (select && select.value && submitButton) {
+                const actionText = select.options[select.selectedIndex].text;
+                
+                // Add confirmation for potentially destructive actions
+                if (actionText.includes('Desactivar') || 
+                    actionText.includes('Eliminar') || 
+                    actionText.includes('Resetear') ||
+                    actionText.includes('Borrar')) {
+                    
+                    const message = '{% trans "Are you sure you want to perform this action on the selected items?" %}';
+                    if (!confirm(message)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

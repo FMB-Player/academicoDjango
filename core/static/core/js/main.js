@@ -1,5 +1,3 @@
-// Main JavaScript file for the application
-
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-hide flash messages after 5 seconds
     const messages = document.querySelectorAll('.alert');
@@ -121,6 +119,37 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Disable null links
+    function disableNullLinks() {
+        const links = document.querySelectorAll('a[href="#"]');
+        links.forEach(link => {
+            link.removeAttribute('href');
+            link.setAttribute('disabled', "");
+            link.setAttribute('role', 'button');
+            link.style.pointerEvents = 'none';
+        });
+    }
+
+    disableNullLinks();
+
+    // Highlight current page on navbar
+    function activePage() {
+        const links = document.querySelectorAll('.nav-links a');
+        const currentUrl = window.location.pathname;
+
+        links.forEach(link => {
+            let href = link.getAttribute('href');
+
+            if (href === currentUrl) {
+                link.classList.add('nav-link-active');
+            } else {
+                link.classList.remove('nav-link-active');
+            }
+        });
+    }
+
+    activePage();
 });
 
 // Add a small delay before removing the loading class from the body
@@ -128,20 +157,3 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('load', function() {
     document.body.classList.add('loaded');
 });
-
-function activePage() {
-    const links = document.querySelectorAll('.nav-links a');
-    const currentUrl = window.location.pathname;
-
-    links.forEach(link => {
-        let href = link.getAttribute('href');
-
-        if (href === currentUrl) {
-            link.classList.add('nav-link-active');
-        } else {
-            link.classList.remove('nav-link-active');
-        }
-    });
-}
-
-activePage();

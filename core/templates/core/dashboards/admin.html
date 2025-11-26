@@ -79,63 +79,19 @@ Bienvenido al panel de administración del sistema académico.
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No hay actividad reciente para mostrar.</p>
+            <p class="text-gray-600">No hay actividad reciente para mostrar.</p>
         {% endif %}
     </div>
 </div>
 
+{% block extra_css %}
+{{ block.super }}
 <style>
-.dashboard-header {
-    margin-bottom: 2rem;
-}
-
-.dashboard-header h1 {
-    margin-bottom: 0.5rem;
-}
-
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-}
-
-.dashboard-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-}
-
-.dashboard-card.wide {
-    grid-column: 1 / -1;
-}
-
-.card-icon {
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-}
-
-.card-content h3 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.1rem;
-    color: var(--text-color);
-}
-
-.stat {
-    font-size: 2rem;
-    font-weight: 600;
-    margin: 0.5rem 0;
-    color: var(--primary-color);
-}
-
+/* Specific admin dashboard styles that aren't covered by base components */
 .quick-actions {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
-    margin-top: 1rem;
 }
 
 .activity-list {
@@ -146,8 +102,9 @@ Bienvenido al panel de administración del sistema académico.
 
 .activity-list li {
     display: flex;
-    padding: 1rem 0;
-    border-bottom: 1px solid #eee;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--gray-200);
 }
 
 .activity-list li:last-child {
@@ -158,12 +115,12 @@ Bienvenido al panel de administración del sistema académico.
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #f0f4f8;
+    background-color: var(--gray-100);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-right: 1rem;
-    flex-shrink: 0;
+    color: var(--primary);
 }
 
 .activity-content {
@@ -171,29 +128,34 @@ Bienvenido al panel de administración del sistema académico.
 }
 
 .activity-message {
-    margin: 0 0 0.25rem 0;
+    margin: 0;
+    font-size: 0.9rem;
 }
 
 .activity-time {
-    font-size: 0.85rem;
-    color: var(--text-light);
+    font-size: 0.8rem;
+    color: var(--gray-600);
 }
 
-@media (max-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .quick-actions {
-        flex-direction: column;
-    }
-    
-    .quick-actions .btn {
-        width: 100%;
-    }
+/* Card icon styles */
+.card-icon {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+/* Stat number styling */
+.stat {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0.5rem 0;
+}
+
+/* Wide card layout */
+.dashboard-card.wide {
+    grid-column: 1 / -1;
 }
 </style>
-
-<!-- Font Awesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
 {% endblock %}

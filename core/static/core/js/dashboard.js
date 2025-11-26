@@ -195,3 +195,32 @@ function animateValue(element, start, end, duration) {
     
     requestAnimationFrame(updateValue);
 }
+/**
+ * Filter courses by career
+ */
+function filterByCareer() {
+    // Filtrado de materias por carrera
+    const carreraBadges = document.querySelectorAll('.carrera-badge');
+    const materias = document.querySelectorAll('.subject-card');
+    
+    if (carreraBadges.length > 0) {
+        carreraBadges.forEach(badge => {
+            badge.addEventListener('click', function() {
+                const carrera = this.getAttribute('data-carrera');
+                
+                // Actualizar estado activo
+                document.querySelectorAll('.carrera-badge').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Filtrar materias
+                materias.forEach(materia => {
+                    if (carrera === 'all' || materia.getAttribute('data-carreras').includes(carrera)) {
+                        materia.style.display = '';
+                    } else {
+                        materia.style.display = 'none';
+                    }
+                });
+            });
+        });
+    }
+}

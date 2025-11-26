@@ -35,6 +35,20 @@ a:hover {
     text-decoration: underline;
 }
 
+.primary-color {
+    color: var(--primary-color);
+}
+
+.primary-color-alt {
+    color: var(--primary-hover);
+}
+
+.alert-on-hover:hover {
+    .alert-on-hover-target {
+        color: var(--warning);
+    };
+}
+
 /* Layout */
 .main-header {
     background-color: var(--fake-white);
@@ -269,6 +283,14 @@ main {
     border: 1px solid #fcd34d;
 }
 
+.text-success {
+    color: #38a169;
+}
+
+.text-danger {
+    color: #e53e3e;
+}
+
 /* Buttons */
 .btn {
     display: inline-block;
@@ -280,7 +302,8 @@ main {
     border: none;
 }
 
-:disabled {
+/* All disabled elements */
+:disabled, [disabled], .disabled, [aria-disabled="true"], [href="#"] {
     cursor: default !important;
     filter: grayscale(90%);
     opacity: 0.6;

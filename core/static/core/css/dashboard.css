@@ -1,4 +1,11 @@
-/* Dashboard Layout */
+/* Dashboard Main CSS */
+@import '_dashboard-base.css';
+@import 'layouts/dashboard.css';
+@import 'components/cards.css';
+@import 'components/progress.css';
+@import 'components/avatar.css';
+
+/* Existing dashboard styles */
 .dashboard-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -406,6 +413,40 @@
     margin: 0;
     font-size: 0.85rem;
     color: var(--text-light);
+}
+
+/* Grade-specifics */
+
+.grade-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.grade-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.grade-course {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.grade-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.grade-title {
+    font-weight: 500;
+}
+
+.grade-value {
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
 /* Task List */

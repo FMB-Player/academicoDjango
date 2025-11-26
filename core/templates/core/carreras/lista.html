@@ -1,0 +1,79 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ title }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}</h1>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'core:login' %}?next={% url 'core:carreras' %}" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt me-1"></i> Iniciar sesión para inscribirte
+            </a>
+        {% endif %}
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        {% for carrera in carreras %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="card-title">{{ carrera.nombre }}</h5>
+                        {% if is_alumno %}
+                            {% if carrera.id in user_subscriptions %}
+                                <span class="badge bg-success">Inscripto</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        Duración: {{ carrera.duracion }} año{{ carrera.duracion|pluralize }}
+                    </h6>
+                    <!-- <p class="card-text">
+                        <small class="text-muted">
+                            Cupo máximo: {{ carrera.cupo_maximo }} alumnos
+                        </small>
+                    </p> 
+                     We don't want to show this data. Keep it for if we have something else to display in the future -->
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="#" class="btn btn-sm btn-outline-primary">
+                            Ver detalles
+                        </a>
+                        
+                        {% if is_alumno %}
+                            {% if carrera.id in user_subscriptions %}
+                                <a href="{% url 'core:alumno_mis_materias' %}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check-circle me-1"></i> Ver materias
+                                </a>
+                            {% else %}
+                                <form method="post" action="{% url 'core:inscribir_carrera' carrera.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-user-plus me-1"></i> Inscribirme
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No hay carreras disponibles en este momento.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

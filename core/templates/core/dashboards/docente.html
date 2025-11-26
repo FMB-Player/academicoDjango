@@ -1,5 +1,7 @@
 {% extends 'core/dashboards/base_dashboard.html' %}
 
+{% block title %}Docente{% endblock %}
+
 {% block dashboard_title %}Panel del Docente{% endblock %}
 
 {% block dashboard_subtitle %}
@@ -12,7 +14,7 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
     <div class="dashboard-card wide">
         <div class="card-header">
             <h2><i class="fas fa-chalkboard-teacher"></i> Mis Materias</h2>
-            <a href="{% url 'core:mis_materias' %}" class="btn btn-sm">Ver todas</a>
+            <a href="{% url 'core:docente_mis_materias' %}" class="btn btn-sm">Ver todas</a>
         </div>
         <div class="card-content">
             {% if materias %}
@@ -51,7 +53,7 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
                                 <td>
                                     <button class="btn btn-sm btn-icon view-details" 
                                             title="Ver detalles" 
-                                            data-url="{% url 'core:detalle_materia' materia.id %}">
+                                            data-url="{% url 'core:docente_detalle_materia' materia.id %}">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button class="btn btn-sm btn-icon" title="Tomar asistencia" disabled>
@@ -65,7 +67,7 @@ Bienvenido, {% if user.nombre or user.apellido %}{{ user.nombre }} {{ user.apell
                 </div>
                 {% if materias|length > 5 %}
                 <div class="text-center mt-2">
-                    <a href="{% url 'core:mis_materias' %}" class="btn btn-sm">Ver más materias</a>
+                    <a href="{% url 'core:docente_mis_materias' %}" class="btn btn-sm">Ver más materias</a>
                 </div>
                 {% endif %}
             {% else %}
